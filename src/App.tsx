@@ -1,91 +1,171 @@
-import { FileUpload } from './modules/CsvImporter/components/FileUpload';
-import { db } from './config/firebase';
-import { collection, addDoc, onSnapshot } from 'firebase/firestore';
-import { useState, useEffect } from 'react';
-
-interface CsvRow {
-  id: string;
-  fileName: string;
-  uploadedAt: any;
-  [key: string]: any;
-}
+import { useState, useMemo } from 'react';
+import { Database, CheckCircle2, AlertCircle } from 'lucide-react';
+import { FileUpload } from './components/FileUpload';
+import { useFirebase } from './context/FirebaseContext';
+import { useCsvImporter } from './hooks/useCsvImporter';
+import { useCollectionData } from './hooks/useCollectionData';
+import { Header } from './components/Header';
+import { SettingsModal } from './components/SettingsModal';
+import { Stats } from './components/Stats';
+import { DataGrid } from './components/DataGrid';
+import { MappingModal } from './components/MappingModal';
+import { SupportedDatabases } from './components/SupportedDatabases';
 
 function App() {
-  const [csvData, setCsvData] = useState<CsvRow[]>([]);
+  const { config, isConnected } = useFirebase();
+  const { data, error: dataError, isPurging, purge } = useCollectionData();
+  const importer = useCsvImporter();
 
-  useEffect(() => {
-    const unsubscribe = onSnapshot(collection(db, 'csvData'), (snapshot) => {
-      const data = snapshot.docs.map(doc => ({
-        id: doc.id,
-        ...doc.data()
-      })) as CsvRow[];
-      setCsvData(data);
-    });
-    return unsubscribe;
-  }, []);
+  const [showSettings, setShowSettings] = useState(false);
+  const [selectedProvider, setSelectedProvider] = useState<import('./context/FirebaseContext').DatabaseProvider | undefined>(undefined);
+  const [showSuccessToast, setShowSuccessToast] = useState(false);
 
-  const handleFileSelect = async (file: File) => {
-    try {
-      const text = await file.text();
-      const lines = text.split('\n').filter(line => line.trim());
-      const headers = lines[0].split(',').map(h => h.trim());
-      
-      const data = lines.slice(1).map(line => {
-        const values = line.split(',').map(v => v.trim());
-        const row: any = {};
-        headers.forEach((header, index) => {
-          row[header] = values[index] || '';
-        });
-        return row;
-      });
+  // Derived state
+  const uniqueFilesCount = useMemo(() => {
+    return new Set(data.map(row => row._fileName || 'Cloud Source')).size;
+  }, [data]);
 
-      // Save each row to Firestore
-      for (const row of data) {
-        await addDoc(collection(db, 'csvData'), {
-          ...row,
-          fileName: file.name,
-          uploadedAt: new Date()
-        });
-      }
-      
-      console.log(`Uploaded ${data.length} rows`);
-    } catch (error) {
-      console.error('Error processing CSV:', error);
+  // Handlers
+  const handleFileSelect = async (files: File[]) => {
+    await importer.parseMultipleFiles(files);
+  };
+
+  const handleCommit = async () => {
+    await importer.commit();
+    if (!importer.error) {
+      setShowSuccessToast(true);
+      setTimeout(() => setShowSuccessToast(false), 5000);
     }
   };
 
   return (
-    <div className="min-h-screen bg-slate-50 py-12 px-4 sm:px-6 lg:px-8">
-      <div className="max-w-4xl mx-auto">
-        <h1 className="text-3xl font-bold text-slate-900 mb-8 text-center">CSV Upload</h1>
-        <FileUpload onFileSelect={handleFileSelect} />
-        
-        {csvData.length > 0 && (
-          <div className="mt-8">
-            <h2 className="text-xl font-semibold mb-4">CSV Data ({csvData.length} rows)</h2>
-            <div className="bg-white rounded-lg shadow overflow-x-auto">
-              <table className="w-full">
-                <thead className="bg-gray-50">
-                  <tr>
-                    {csvData[0] && Object.keys(csvData[0]).filter(key => !['id', 'fileName', 'uploadedAt'].includes(key)).map(header => (
-                      <th key={header} className="px-4 py-2 text-left text-sm font-medium text-gray-900">{header}</th>
-                    ))}
-                  </tr>
-                </thead>
-                <tbody>
-                  {csvData.map((row) => (
-                    <tr key={row.id} className="border-t">
-                      {Object.keys(row).filter(key => !['id', 'fileName', 'uploadedAt'].includes(key)).map(key => (
-                        <td key={key} className="px-4 py-2 text-sm text-gray-700">{row[key]}</td>
-                      ))}
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
+    <div className="min-h-screen">
+      {/* Mapping Modal - Shows when files are parsed */}
+      {importer.processedFiles.length > 0 && (
+        <MappingModal
+          fileName={importer.processedFiles.length === 1
+            ? importer.processedFiles[0].file.name
+            : `${importer.processedFiles.length} files`}
+          rowCount={importer.processedFiles.reduce((sum, pf) => sum + pf.file.data.length, 0)}
+          mapping={importer.processedFiles[0]?.mapping || []}
+          onUpdateMapping={(newMapping) => {
+            if (importer.processedFiles.length > 0) {
+              importer.updateMapping(0, newMapping);
+            }
+          }}
+          onCommit={handleCommit}
+          onCancel={importer.reset}
+          isImporting={importer.isImporting}
+          collectionName={config.collectionName}
+        />
+      )}
+
+      {/* Settings Modal */}
+      {showSettings && (
+        <SettingsModal
+          onClose={() => setShowSettings(false)}
+          initialProvider={selectedProvider}
+        />
+      )}
+
+      {/* Success Toast */}
+      {showSuccessToast && importer.successCount && (
+        <div className="fixed top-8 right-8 z-[120] animate-in slide-in-from-right-full">
+          <div className="bg-white rounded-3xl shadow-2xl border border-emerald-100 p-6 flex items-center gap-5">
+            <div className="bg-emerald-500 p-4 rounded-2xl shadow-lg">
+              <CheckCircle2 className="text-white" />
+            </div>
+            <div>
+              <h4 className="font-black text-slate-900">Import Success</h4>
+              <p className="text-slate-500 font-medium">{importer.successCount} records committed.</p>
             </div>
           </div>
+        </div>
+      )}
+
+      <Header onOpenSettings={() => setShowSettings(true)} />
+
+      <main className="max-w-7xl mx-auto px-10 -mt-24 pb-32 space-y-12">
+        {/* Error Display */}
+        {(importer.error || dataError) && (
+          <div className="bg-white border-l-[12px] border-red-500 p-8 rounded-3xl shadow-2xl flex items-center justify-between animate-in slide-in-from-top-6">
+            <div className="flex items-center gap-6">
+              <div className="bg-red-50 p-4 rounded-xl">
+                <AlertCircle className="text-red-500" />
+              </div>
+              <div>
+                <h3 className="font-black text-slate-900 text-lg">System Alert</h3>
+                <p className="text-slate-500 font-medium">{importer.error || dataError}</p>
+              </div>
+            </div>
+            {!isConnected && (
+              <button onClick={() => setShowSettings(true)} className="px-6 py-3 bg-slate-900 text-white rounded-xl font-black">
+                Fix Settings
+              </button>
+            )}
+          </div>
         )}
-      </div>
+
+        {/* Upload Area */}
+        <div className="bg-white p-3 rounded-[3.5rem] shadow-2xl border border-slate-100">
+          <FileUpload onFileSelect={handleFileSelect} />
+        </div>
+
+        {/* Database Offline Warning */}
+        {!isConnected && (
+          <div className="bg-white/50 backdrop-blur-sm p-12 rounded-[2.5rem] text-center border shadow-xl space-y-6">
+            <div className="inline-block p-6 bg-slate-50 rounded-2xl border">
+              <Database className="w-12 h-12 text-blue-600" />
+            </div>
+            <div>
+              <h2 className="text-3xl font-black text-slate-900">Database Offline</h2>
+              <p className="text-lg text-slate-400 max-w-lg mx-auto">
+                Connect your Firebase project to enable cloud synchronization and live data management.
+              </p>
+            </div>
+            <button onClick={() => setShowSettings(true)} className="btn-primary py-4 px-10 text-lg">
+              Setup Connection
+            </button>
+          </div>
+        )}
+
+        {isConnected && (
+          <div className="space-y-16 animate-in fade-in slide-in-from-bottom-6 duration-700">
+            <Stats
+              isDbConnected={isConnected}
+              totalStorage={data.length}
+              collectionName={config.collectionName}
+              uniqueFilesCount={uniqueFilesCount}
+            />
+
+            <DataGrid
+              data={data}
+              onPurge={purge}
+              isPurging={isPurging}
+              collectionName={config.collectionName}
+            />
+          </div>
+        )}
+      </main>
+
+      <SupportedDatabases
+        onSelectDatabase={(provider) => {
+          setSelectedProvider(provider);
+          setShowSettings(true);
+        }}
+      />
+
+      <footer className="bg-slate-950 py-24 border-t border-white/5">
+        <div className="max-w-7xl mx-auto px-10 text-center">
+          <div className="flex items-center justify-center gap-3 mb-6">
+            <Database className="text-blue-500" />
+            <span className="text-2xl font-black text-white tracking-tighter">DATA ENGINE PRO</span>
+          </div>
+          <p className="text-slate-600 font-bold uppercase tracking-widest text-xs">
+            Dynamic Ingestion & Field Mapping Active
+          </p>
+        </div>
+      </footer>
     </div>
   );
 }
