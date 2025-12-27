@@ -160,8 +160,8 @@ export class AnalyzeCsvTool {
         let totalCells = 0;
         let filledCells = 0;
 
-        rows.forEach((row, rowIndex) => {
-            headers.forEach((header, colIndex) => {
+        rows.forEach((row) => {
+            headers.forEach((_, colIndex) => {
                 totalCells++;
                 const value = row[colIndex];
 

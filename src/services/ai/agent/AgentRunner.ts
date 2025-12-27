@@ -59,10 +59,9 @@ export class AgentRunner {
 
             // Step 3: Create field mapping
             console.log('[Agent] Step 3: Creating field mappings...');
-            const mappingResult = MapFieldsTool.createMapping(
+            const mappingResult = await MapFieldsTool.createMapping(
                 input.csvHeaders,
-                schema,
-                input.selectedDatabaseProvider
+                schema
             );
 
             // Step 4: Transform CSV data using mapping

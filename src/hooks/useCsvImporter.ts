@@ -1,3 +1,4 @@
+// src/hooks/useCsvImporter.ts
 import { useState } from 'react';
 import Papa from 'papaparse';
 import { collection, writeBatch, doc } from 'firebase/firestore';
@@ -9,6 +10,13 @@ export interface MappingField {
     csvHeader: string;
     firestoreField: string;
     isEnabled: boolean;
+    isPrimaryKey?: boolean;
+    isForeignKey?: boolean;
+    foreignKeyTable?: string;
+    foreignKeyField?: string;
+    dataType?: 'string' | 'number' | 'boolean' | 'date' | 'email' | 'url';
+    isRequired?: boolean;
+    isUnique?: boolean;
 }
 
 export interface CSVFile {
@@ -17,12 +25,26 @@ export interface CSVFile {
     headers: string[];
 }
 
+export interface DataDescription {
+    purpose: string;
+    uploadedBy: string;
+    dataSource: string;
+    category: string;
+    notes: string;
+    timestamp: string;
+}
+
 export interface ProcessedFile {
     file: CSVFile;
     aiResult: AIProcessOutput | null;
     mapping: MappingField[];
+    dataDescription?: DataDescription;
 }
 
+/**
+ * Hook that handles CSV parsing, optional AI assistance, and importing to Firestore.
+ * Includes a deduplication helper to remove duplicate rows before import.
+ */
 export const useCsvImporter = () => {
     const { db, config } = useFirebase();
     const [processedFiles, setProcessedFiles] = useState<ProcessedFile[]>([]);
@@ -30,174 +52,231 @@ export const useCsvImporter = () => {
     const [progress, setProgress] = useState(0);
     const [error, setError] = useState<string | null>(null);
     const [successCount, setSuccessCount] = useState<number | null>(null);
-
-    // AI Agent state
     const [aiProcessing, setAiProcessing] = useState(false);
     const [useAiAssist, setUseAiAssist] = useState(true);
 
+    // ---------------------------------------------------------------------
+    // Helper: deep deduplication of an array of objects
+    // ---------------------------------------------------------------------
+    const deduplicateRows = (rows: any[]): any[] => {
+        const seen = new Set<string>();
+        return rows.filter(row => {
+            const key = JSON.stringify(row);
+            if (seen.has(key)) return false;
+            seen.add(key);
+            return true;
+        });
+    };
+
+    // ---------------------------------------------------------------------
+    // Parsing a single file
+    // ---------------------------------------------------------------------
     const parseFile = async (fileToParse: File) => {
         setError(null);
         setSuccessCount(null);
 
         Papa.parse(fileToParse, {
-            complete: async (results) => {
-                if (results.data.length < 1) {
-                    setError("Empty CSV file.");
+            complete: async results => {
+                if (!results.data || results.data.length < 1) {
+                    setError('Empty CSV file.');
                     return;
                 }
-
                 const headers = results.data[0] as string[];
                 const csvRows = results.data.slice(1);
-
-                // Create initial basic mapping
-                const initialMapping = headers.map(h => ({
+                const initialMapping: MappingField[] = headers.map(h => ({
                     csvHeader: h,
                     firestoreField: h.replace(/[^a-zA-Z0-9]/g, '_').toLowerCase(),
-                    isEnabled: !!h
+                    isEnabled: !!h,
                 }));
-
-                const csvFile: CSVFile = {
-                    name: fileToParse.name,
-                    data: csvRows,
-                    headers
-                };
-
+                const csvFile: CSVFile = { name: fileToParse.name, data: csvRows, headers };
                 let aiResult: AIProcessOutput | null = null;
                 let finalMapping = initialMapping;
-
-                // Run AI processing if enabled
                 if (useAiAssist && config) {
                     try {
                         setAiProcessing(true);
-                        console.log('[CSV Importer] Running AI data entry agent...');
-
                         const agent = DataEntryAgent.create({ autoFix: true });
-                        const result = await agent.quickProcess(
-                            headers,
-                            csvRows as any[][],
-                            config
-                        );
-
+                        const result = await agent.quickProcess(headers, csvRows as any[][], config);
                         aiResult = result;
-
-                        // Update mapping based on AI recommendations
                         finalMapping = headers.map(h => ({
                             csvHeader: h,
                             firestoreField: result.mapping[h] || h.replace(/[^a-zA-Z0-9]/g, '_').toLowerCase(),
-                            isEnabled: !!result.mapping[h]
+                            isEnabled: !!result.mapping[h],
                         }));
-
-                        console.log('[CSV Importer] AI processing complete');
-                        console.log(`[CSV Importer] Valid rows: ${result.stats.validRows}/${result.stats.totalRows}`);
-                        console.log(`[CSV Importer] Transformations: ${result.stats.transformationsApplied}`);
-
-                        if (result.errors.length > 0) {
-                            console.warn(`[CSV Importer] ${result.errors.length} validation errors found`);
-                        }
-                    } catch (aiError: any) {
-                        console.error('[CSV Importer] AI processing failed:', aiError);
-                        setError(`AI assist failed: ${aiError.message}. Using basic mapping.`);
+                    } catch (e: any) {
+                        console.error('AI processing failed', e);
+                        setError(`AI assist failed: ${e.message}`);
                     } finally {
                         setAiProcessing(false);
                     }
                 }
-
-                // Add to processed files
-                setProcessedFiles(prev => [...prev, {
-                    file: csvFile,
-                    aiResult,
-                    mapping: finalMapping
-                }]);
+                setProcessedFiles(prev => [...prev, { file: csvFile, aiResult, mapping: finalMapping }]);
             },
-            error: (err) => {
-                setError(`CSV Parsing failed: ${err.message}`);
-            }
+            error: err => setError(`CSV Parsing failed: ${err.message}`),
         });
     };
 
-    const parseMultipleFiles = async (filesToParse: File[]) => {
-        for (const file of filesToParse) {
-            await parseFile(file);
+    // ---------------------------------------------------------------------
+    // Parsing multiple files (batch)
+    // ---------------------------------------------------------------------
+    const parseMultipleFiles = async (files: File[]) => {
+        setError(null);
+        setAiProcessing(true);
+        const newProcessed: ProcessedFile[] = [];
+        for (const file of files) {
+            await new Promise<void>((resolve, reject) => {
+                Papa.parse(file, {
+                    complete: async results => {
+                        try {
+                            const headers = results.data[0] as string[];
+                            const csvRows = results.data.slice(1);
+                            const initialMapping: MappingField[] = headers.map(h => ({
+                                csvHeader: h,
+                                firestoreField: h.replace(/[^a-zA-Z0-9]/g, '_').toLowerCase(),
+                                isEnabled: !!h,
+                                isPrimaryKey: false,
+                                isForeignKey: false,
+                                dataType: 'string' as const,
+                                isRequired: false,
+                                isUnique: false,
+                            }));
+                            const csvFile: CSVFile = { name: file.name, data: csvRows, headers };
+                            let aiResult: AIProcessOutput | null = null;
+                            let finalMapping = initialMapping;
+                            if (useAiAssist && config) {
+                                try {
+                                    const agent = DataEntryAgent.create({ autoFix: true });
+                                    const result = await agent.quickProcess(headers, csvRows as any[][], config);
+                                    aiResult = result;
+                                    finalMapping = headers.map(h => ({
+                                        csvHeader: h,
+                                        firestoreField: result.mapping[h] || h.replace(/[^a-zA-Z0-9]/g, '_').toLowerCase(),
+                                        isEnabled: !!result.mapping[h],
+                                        isPrimaryKey: false,
+                                        isForeignKey: false,
+                                        dataType: 'string' as const,
+                                        isRequired: false,
+                                        isUnique: false,
+                                    }));
+                                } catch (e) {
+                                    console.error('AI processing failed', e);
+                                }
+                            }
+                            newProcessed.push({ file: csvFile, aiResult, mapping: finalMapping });
+                            resolve();
+                        } catch (e) {
+                            reject(e as any);
+                        }
+                    },
+                    error: err => reject(err as any),
+                });
+            });
         }
+        setProcessedFiles(prev => [...prev, ...newProcessed]);
+        setAiProcessing(false);
     };
 
-    const updateMapping = (fileIndex: number, newMapping: MappingField[]) => {
-        setProcessedFiles(prev => prev.map((pf, idx) =>
-            idx === fileIndex ? { ...pf, mapping: newMapping } : pf
-        ));
+    // ---------------------------------------------------------------------
+    // Mapping & description helpers
+    // ---------------------------------------------------------------------
+    const updateMapping = (fileIdx: number, newMapping: MappingField[]) => {
+        setProcessedFiles(prev =>
+            prev.map((pf, i) => (i === fileIdx ? { ...pf, mapping: newMapping } : pf))
+        );
     };
 
-    const removeFile = (fileIndex: number) => {
-        setProcessedFiles(prev => prev.filter((_, idx) => idx !== fileIndex));
+    const updateDataDescription = (fileIdx: number, description: DataDescription) => {
+        setProcessedFiles(prev =>
+            prev.map((pf, i) => (i === fileIdx ? { ...pf, dataDescription: description } : pf))
+        );
     };
 
+    const removeFile = (fileIdx: number) => {
+        setProcessedFiles(prev => prev.filter((_, i) => i !== fileIdx));
+    };
+
+    // ---------------------------------------------------------------------
+    // Replace file data (used after deduplication)
+    // ---------------------------------------------------------------------
+    const replaceFileData = (fileIdx: number, newFile: CSVFile) => {
+        setProcessedFiles(prev =>
+            prev.map((pf, i) => (i === fileIdx ? { ...pf, file: newFile } : pf))
+        );
+    };
+
+    // ---------------------------------------------------------------------
+    // Deduplicate all processed files
+    // ---------------------------------------------------------------------
+    const deduplicateAll = () => {
+        setProcessedFiles(prev =>
+            prev.map(pf => {
+                const uniqueData = deduplicateRows(pf.file.data);
+                const newFile: CSVFile = { ...pf.file, data: uniqueData };
+                return { ...pf, file: newFile };
+            })
+        );
+    };
+
+    // ---------------------------------------------------------------------
+    // Commit to Firestore
+    // ---------------------------------------------------------------------
     const commit = async () => {
         if (!db) {
-            setError("Firebase is not connected.");
+            setError('Firebase is not connected.');
             return;
         }
-        if (processedFiles.length === 0 || !config.collectionName) return;
-
+        if (!config?.collectionName) return;
         setIsImporting(true);
         setProgress(0);
         setError(null);
-
         try {
             let totalImported = 0;
-
-            // Process each file
             for (let fileIdx = 0; fileIdx < processedFiles.length; fileIdx++) {
                 const { file: csvFile, aiResult, mapping } = processedFiles[fileIdx];
-
-                // Use AI-cleaned data if available, otherwise fall back to manual mapping
-                let dataToImport: any[];
-
-                if (aiResult && aiResult.cleanedData.length > 0) {
-                    console.log(`[CSV Importer] Using AI-cleaned data for ${csvFile.name}`);
-                    dataToImport = aiResult.cleanedData;
+                // Choose source data (AI cleaned or manual)
+                let dataToImport: any[] = [];
+                if (aiResult && aiResult.cleanedData && aiResult.cleanedData.length > 0) {
+                    dataToImport = deduplicateRows(aiResult.cleanedData);
                 } else {
-                    console.log(`[CSV Importer] Using manual mapping for ${csvFile.name}`);
-                    // Transform using manual mapping
-                    dataToImport = csvFile.data.map((values: any) => {
+                    dataToImport = csvFile.data.map(values => {
                         const entry: any = {};
-                        mapping.forEach((field, index) => {
-                            if (field.isEnabled) {
-                                entry[field.firestoreField] = values[index] || '';
+                        mapping.forEach((field, idx) => {
+                            if (field.isEnabled && idx < values.length) {
+                                entry[field.firestoreField] = values[idx] ?? '';
                             }
                         });
                         return entry;
                     });
+                    dataToImport = deduplicateRows(dataToImport);
                 }
-
                 const batchSize = 450;
                 let processed = 0;
                 const total = dataToImport.length;
-
-                // Process in chunks
                 while (processed < total) {
                     const batch = writeBatch(db);
                     const chunk = dataToImport.slice(processed, processed + batchSize);
-
                     chunk.forEach(entry => {
                         const docRef = doc(collection(db, config.collectionName));
-                        // Import only the clean data - no extra fields
-                        batch.set(docRef, entry);
+                        const dataWithMeta = {
+                            ...entry,
+                            _fileName: csvFile.name,
+                            _uploadedAt: new Date().toISOString(),
+                            ...(processedFiles[fileIdx].dataDescription && {
+                                _dataDescription: { ...processedFiles[fileIdx].dataDescription },
+                            }),
+                        };
+                        batch.set(docRef, dataWithMeta);
                     });
-
                     await batch.commit();
                     processed += chunk.length;
                     totalImported += chunk.length;
-
-                    // Update progress across all files
                     const overallProgress = ((fileIdx * 100) + Math.round((processed / total) * 100)) / processedFiles.length;
                     setProgress(Math.round(overallProgress));
                 }
             }
-
             setSuccessCount(totalImported);
-            setProcessedFiles([]); // Clear all files on success
-        } catch (err: any) {
-            setError(`Import failed: ${err.message}`);
+            setProcessedFiles([]);
+        } catch (e: any) {
+            setError(`Import failed: ${e.message}`);
         } finally {
             setIsImporting(false);
         }
@@ -211,9 +290,7 @@ export const useCsvImporter = () => {
         setAiProcessing(false);
     };
 
-    const toggleAiAssist = () => {
-        setUseAiAssist(prev => !prev);
-    };
+    const toggleAiAssist = () => setUseAiAssist(prev => !prev);
 
     return {
         processedFiles,
@@ -224,12 +301,14 @@ export const useCsvImporter = () => {
         parseFile,
         parseMultipleFiles,
         updateMapping,
+        updateDataDescription,
         removeFile,
+        replaceFileData,
+        deduplicateAll,
         commit,
         reset,
-        // AI-related exports
         aiProcessing,
         useAiAssist,
-        toggleAiAssist
+        toggleAiAssist,
     };
 };

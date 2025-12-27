@@ -1,4 +1,5 @@
-import { createContext, useContext, useEffect, useState, ReactNode, useCallback } from 'react';
+import { createContext, useContext, useEffect, useState, useCallback } from 'react';
+import type { ReactNode } from 'react';
 import { initializeApp, getApp, getApps, deleteApp } from 'firebase/app';
 import { getFirestore, Firestore } from 'firebase/firestore';
 
@@ -90,19 +91,24 @@ export const FirebaseProvider = ({ children }: { children: ReactNode }) => {
 
     const initFirebase = useCallback(async (credentials: FirebaseConfig) => {
         try {
+            // Only initialize Firebase if the provider is Firebase
+            if (credentials.provider !== 'Firebase') {
+                setDb(null);
+                setError(null);
+                setIsValidated(true); // Other providers are "validated" by having config
+                return;
+            }
+
             if (!credentials.apiKey || !credentials.projectId || !credentials.appId) {
                 setDb(null);
                 setIsValidated(false);
+                setError("Please configure Firebase credentials in Pipeline Configuration.");
                 return;
             }
 
             // Clean up existing app if it exists to avoid "app already defined" errors
             if (getApps().length > 0) {
                 const currentApp = getApp();
-                // We can't easily "un-init" but we can get the existing one or try to re-init
-                // For simple hot-reloading support, usually we just get the existing app
-                // But if config CHANGED, we might need to delete. 
-                // deleteApp is async.
                 await deleteApp(currentApp);
             }
 

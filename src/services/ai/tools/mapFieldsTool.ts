@@ -9,11 +9,10 @@ export class MapFieldsTool {
     /**
      * Create intelligent mapping between CSV headers and schema fields
      */
-    static createMapping(
+    static async createMapping(
         csvHeaders: string[],
-        schema: CollectionSchema | undefined,
-        provider: string
-    ): MappingResult {
+        schema: CollectionSchema | undefined
+    ): Promise<MappingResult> {
         // If no schema provided, create simple normalized mapping
         if (!schema || schema.fields.length === 0) {
             return this.createDefaultMapping(csvHeaders);
@@ -26,8 +25,8 @@ export class MapFieldsTool {
         const unmappedSchemaFields = new Set(schemaFieldNames);
         const suggestions: string[] = [];
 
-        csvHeaders.forEach(csvHeader => {
-            const result = this.findBestMatch(csvHeader, schemaFieldNames);
+        for (const csvHeader of csvHeaders) {
+            const result = await this.findBestMatch(csvHeader, schemaFieldNames);
 
             if (result.match) {
                 mapping[csvHeader] = result.match;
@@ -45,7 +44,7 @@ export class MapFieldsTool {
                     `No schema match found for CSV field "${csvHeader}" - will be ignored unless manually mapped`
                 );
             }
-        });
+        }
 
         // Report unmapped schema fields
         unmappedSchemaFields.forEach(field => {
@@ -69,10 +68,10 @@ export class MapFieldsTool {
     /**
      * Find best matching schema field for a CSV header
      */
-    private static findBestMatch(
+    private static async findBestMatch(
         csvHeader: string,
         schemaFields: string[]
-    ): { match: string | null; confidence: number } {
+    ): Promise<{ match: string | null; confidence: number }> {
         const normalized = this.normalizeFieldName(csvHeader);
 
         // 1. Exact match (case-insensitive)
@@ -94,13 +93,32 @@ export class MapFieldsTool {
             }
         }
 
-        // 3. Semantic similarity
+        // 3. AI-powered semantic similarity
+        try {
+            const AIService = (await import('../AIService')).default;
+            let bestAiMatch = { field: '', confidence: 0 };
+
+            for (const schemaField of schemaFields) {
+                const similarity = await AIService.calculateSimilarity(csvHeader, schemaField);
+                if (similarity > bestAiMatch.confidence) {
+                    bestAiMatch = { field: schemaField, confidence: similarity };
+                }
+            }
+
+            if (bestAiMatch.confidence > 0.7) {
+                return { match: bestAiMatch.field, confidence: bestAiMatch.confidence };
+            }
+        } catch (error) {
+            // AI not available, continue with fallback
+        }
+
+        // 4. Semantic match (fallback)
         const semanticMatch = this.findSemanticMatch(normalized, schemaFields);
         if (semanticMatch) {
             return semanticMatch;
         }
 
-        // 4. Partial match
+        // 5. Partial match
         const partialMatch = schemaFields.find(
             f => this.normalizeFieldName(f).includes(normalized) ||
                 normalized.includes(this.normalizeFieldName(f))

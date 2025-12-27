@@ -137,7 +137,7 @@ export class FixDataTool {
     }
 
     /**
-     * Remove duplicate rows
+     * Mark duplicate rows (don't remove - let human decide)
      */
     private static deduplicateData(
         data: Array<Record<string, any>>,
@@ -147,28 +147,28 @@ export class FixDataTool {
         transformations: Transformation[];
     } {
         const seen = new Set<string>();
-        const dedupedData: Array<Record<string, any>> = [];
         const transformations = [...existingTransformations];
 
         data.forEach((row, index) => {
             // Create a hash of the row for duplicate detection
             const hash = this.hashRow(row);
 
-            if (!seen.has(hash)) {
-                seen.add(hash);
-                dedupedData.push(row);
-            } else {
+            if (seen.has(hash)) {
+                // Mark as duplicate but DON'T remove
                 transformations.push({
                     row: index + 1,
                     field: '*',
-                    operation: 'remove-duplicate',
+                    operation: 'mark-duplicate',
                     originalValue: row,
-                    newValue: null
+                    newValue: row // Keep the data, just mark it
                 });
+            } else {
+                seen.add(hash);
             }
         });
 
-        return { data: dedupedData, transformations };
+        // Return ALL data (no removal)
+        return { data, transformations };
     }
 
     /**
