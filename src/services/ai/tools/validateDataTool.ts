@@ -191,32 +191,36 @@ export class ValidateDataTool {
         let suggestedValue: any = null;
 
         switch (expectedType) {
-            case 'email':
+            case 'email': {
                 isValid = ValidationUtils.isValidEmail(strValue);
                 if (!isValid) {
                     suggestedValue = strValue.toLowerCase().trim();
                 }
                 break;
+            }
 
-            case 'url':
+            case 'url': {
                 isValid = ValidationUtils.isValidUrl(strValue);
                 break;
+            }
 
-            case 'number':
+            case 'number': {
                 const cleaned = strValue.replace(/[,$]/g, '');
                 isValid = !isNaN(Number(cleaned));
                 if (isValid) {
                     suggestedValue = Number(cleaned);
                 }
                 break;
+            }
 
-            case 'boolean':
+            case 'boolean': {
                 const boolPattern = /^(true|false|yes|no|0|1)$/i;
                 isValid = boolPattern.test(strValue);
                 if (isValid) {
                     suggestedValue = ['true', 'yes', '1'].includes(strValue.toLowerCase());
                 }
                 break;
+            }
 
             case 'date':
                 try {

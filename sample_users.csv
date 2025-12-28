@@ -1,6 +1,0 @@
-name,email,role,isActive,joinedAt
-John Doe,john@example.com,admin,true,2023-01-15
-Jane Smith,jane@test.com,user,1,2023-03-20
-Bob Wilson,bob@demo.com,editor,true,2023-05-10
-Alice Brown,alice@fake.org,user,false,2023-06-01
-Invalid User,,user,yes,not-a-date

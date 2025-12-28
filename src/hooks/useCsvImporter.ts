@@ -75,14 +75,43 @@ export const useCsvImporter = () => {
         setError(null);
         setSuccessCount(null);
 
+        // Validate file size (max 10MB)
+        const maxSize = 10 * 1024 * 1024; // 10MB
+        if (fileToParse.size > maxSize) {
+            setError('File size too large. Maximum allowed size is 10MB.');
+            return;
+        }
+
+        // Validate file type
+        if (!fileToParse.name.toLowerCase().endsWith('.csv')) {
+            setError('Invalid file type. Please upload a CSV file.');
+            return;
+        }
+
         Papa.parse(fileToParse, {
+            header: false,
+            skipEmptyLines: true,
             complete: async results => {
                 if (!results.data || results.data.length < 1) {
                     setError('Empty CSV file.');
                     return;
                 }
+                
+                // Validate row count (max 50,000 rows)
+                if (results.data.length > 50000) {
+                    setError('File too large. Maximum allowed rows: 50,000.');
+                    return;
+                }
+                
                 const headers = results.data[0] as string[];
                 const csvRows = results.data.slice(1);
+                
+                // Validate headers
+                if (!headers || headers.length === 0) {
+                    setError('Invalid CSV format. No headers found.');
+                    return;
+                }
+                
                 const initialMapping: MappingField[] = headers.map(h => ({
                     csvHeader: h,
                     firestoreField: h.replace(/[^a-zA-Z0-9]/g, '_').toLowerCase(),
@@ -120,15 +149,56 @@ export const useCsvImporter = () => {
     // ---------------------------------------------------------------------
     const parseMultipleFiles = async (files: File[]) => {
         setError(null);
+        
+        // Validate file count (max 10 files)
+        if (files.length > 10) {
+            setError('Too many files. Maximum allowed: 10 files at once.');
+            return;
+        }
+        
         setAiProcessing(true);
         const newProcessed: ProcessedFile[] = [];
+        
         for (const file of files) {
+            // Validate each file
+            const maxSize = 10 * 1024 * 1024; // 10MB
+            if (file.size > maxSize) {
+                setError(`File ${file.name} is too large. Maximum allowed size is 10MB.`);
+                setAiProcessing(false);
+                return;
+            }
+            
+            if (!file.name.toLowerCase().endsWith('.csv')) {
+                setError(`File ${file.name} is not a CSV file.`);
+                setAiProcessing(false);
+                return;
+            }
+            
             await new Promise<void>((resolve, reject) => {
                 Papa.parse(file, {
+                    header: false,
+                    skipEmptyLines: true,
                     complete: async results => {
                         try {
+                            if (!results.data || results.data.length < 1) {
+                                reject(new Error(`Empty CSV file: ${file.name}`));
+                                return;
+                            }
+                            
+                            // Validate row count
+                            if (results.data.length > 50000) {
+                                reject(new Error(`File ${file.name} too large. Maximum allowed rows: 50,000.`));
+                                return;
+                            }
+                            
                             const headers = results.data[0] as string[];
                             const csvRows = results.data.slice(1);
+                            
+                            if (!headers || headers.length === 0) {
+                                reject(new Error(`Invalid CSV format in ${file.name}. No headers found.`));
+                                return;
+                            }
+                            
                             const initialMapping: MappingField[] = headers.map(h => ({
                                 csvHeader: h,
                                 firestoreField: h.replace(/[^a-zA-Z0-9]/g, '_').toLowerCase(),

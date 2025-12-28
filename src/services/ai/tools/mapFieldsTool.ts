@@ -108,7 +108,7 @@ export class MapFieldsTool {
             if (bestAiMatch.confidence > 0.7) {
                 return { match: bestAiMatch.field, confidence: bestAiMatch.confidence };
             }
-        } catch (error) {
+        } catch {
             // AI not available, continue with fallback
         }
 

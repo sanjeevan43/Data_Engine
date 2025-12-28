@@ -163,7 +163,45 @@ export default function MainApp() {
                     csvHeaders={importer.processedFiles.length > 0 && importer.processedFiles[0].file.data[0] ? Object.keys(importer.processedFiles[0].file.data[0]) : []}
                     currentMapping={importer.processedFiles[0]?.mapping || []}
                     onSuggestion={suggestion => {
-                        console.log('Chatbot suggestion:', suggestion);
+                        // Apply chatbot suggestions to the mapping
+                        if (importer.processedFiles.length === 0) return;
+
+                        const currentMapping = importer.processedFiles[0].mapping;
+                        const fieldIndex = currentMapping.findIndex(f => f.csvHeader === suggestion.field);
+
+                        if (fieldIndex === -1) return;
+
+                        const updatedMapping = [...currentMapping];
+
+                        switch (suggestion.type) {
+                            case 'primary-key':
+                                // Set this field as primary key, unset others
+                                updatedMapping.forEach((field, idx) => {
+                                    field.isPrimaryKey = idx === fieldIndex;
+                                });
+                                break;
+
+                            case 'data-type':
+                                // Set the data type for this field
+                                updatedMapping[fieldIndex].dataType = suggestion.value;
+                                break;
+
+                            case 'foreign-key':
+                                // Set foreign key configuration
+                                updatedMapping[fieldIndex].isForeignKey = true;
+                                updatedMapping[fieldIndex].foreignKeyTable = suggestion.value.table;
+                                updatedMapping[fieldIndex].foreignKeyField = suggestion.value.field;
+                                break;
+
+                            case 'mapping':
+                                // Update field mapping
+                                updatedMapping[fieldIndex].firestoreField = suggestion.value;
+                                break;
+                        }
+
+                        // Apply the updated mapping
+                        importer.updateMapping(0, updatedMapping);
+                        console.log(`✅ Applied suggestion: ${suggestion.type} for ${suggestion.field}`, suggestion);
                     }}
                 />
             </main>
@@ -181,7 +219,7 @@ export default function MainApp() {
                 <div className="max-w-7xl mx-auto px-10 text-center">
                     <div className="flex items-center justify-center gap-4 mb-6">
                         <Database className="w-8 h-8 text-blue-400" />
-                        <span className="text-3xl font-black text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-purple-400">DATA ENGINE PRO</span>
+                        <span className="text-3xl font-black text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-purple-400">SmartImport</span>
                     </div>
                     <p className="text-blue-300 font-bold uppercase tracking-widest text-sm">
                         AI-Powered CSV Import System • Built with ❤️

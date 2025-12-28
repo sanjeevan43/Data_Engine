@@ -15,7 +15,7 @@ export const Header: React.FC<HeaderProps> = ({ onOpenSettings }) => {
                     <div className="flex items-center gap-6">
                         <img
                             src="/logo.png"
-                            alt="Data Engine Logo"
+                            alt="SmartImport Logo"
                             className="w-16 h-16 rounded-2xl shadow-2xl"
                         />
                         <div className="flex items-center gap-3 px-5 py-1.5 bg-blue-500/10 border border-blue-500/20 rounded-full">
@@ -24,7 +24,7 @@ export const Header: React.FC<HeaderProps> = ({ onOpenSettings }) => {
                         </div>
                     </div>
                     <h1 className="text-7xl lg:text-8xl font-black text-white leading-none tracking-tighter">
-                        Data <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-purple-400">Engine</span>
+                        Smart<span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-purple-400">Import</span>
                     </h1>
                     <p className="text-2xl text-slate-400 font-medium max-w-2xl">
                         AI-powered CSV import system with intelligent data cleaning, validation, and multi-database support.

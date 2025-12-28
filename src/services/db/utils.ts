@@ -184,12 +184,14 @@ export class DataUtils {
         }
 
         switch (type) {
-            case 'number':
+            case 'number': {
                 const num = Number(value);
                 return isNaN(num) ? null : num;
-            case 'boolean':
+            }
+            case 'boolean': {
                 const str = String(value).toLowerCase();
                 return str === 'true' || str === 'yes' || str === '1';
+            }
             case 'date':
                 try {
                     const date = new Date(value);
@@ -348,18 +350,22 @@ export class ValidationUtils {
                 let isValid = true;
 
                 switch (expectedType) {
-                    case 'number':
+                    case 'number': {
                         isValid = !isNaN(Number(value));
                         break;
-                    case 'boolean':
+                    }
+                    case 'boolean': {
                         isValid = /^(true|false|yes|no|0|1)$/i.test(String(value));
                         break;
-                    case 'email':
+                    }
+                    case 'email': {
                         isValid = this.isValidEmail(String(value));
                         break;
-                    case 'url':
+                    }
+                    case 'url': {
                         isValid = this.isValidUrl(String(value));
                         break;
+                    }
                 }
 
                 if (!isValid) {

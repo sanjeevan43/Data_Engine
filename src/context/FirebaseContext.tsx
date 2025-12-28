@@ -85,8 +85,19 @@ export const FirebaseProvider = ({ children }: { children: ReactNode }) => {
     const [isValidated, setIsValidated] = useState(false);
 
     const [config, setConfig] = useState<FirebaseConfig>(() => {
-        const saved = localStorage.getItem(CONFIG_KEY);
-        return saved ? JSON.parse(saved) : defaultContext.config;
+        try {
+            const saved = localStorage.getItem(CONFIG_KEY);
+            if (saved) {
+                const parsed = JSON.parse(saved);
+                // Validate that parsed config has required structure
+                if (parsed && typeof parsed === 'object' && parsed.provider) {
+                    return { ...defaultContext.config, ...parsed };
+                }
+            }
+        } catch (error) {
+            console.warn('Failed to parse saved config from localStorage:', error);
+        }
+        return defaultContext.config;
     });
 
     const initFirebase = useCallback(async (credentials: FirebaseConfig) => {
@@ -127,12 +138,35 @@ export const FirebaseProvider = ({ children }: { children: ReactNode }) => {
 
     // Init on mount or config change
     useEffect(() => {
-        initFirebase(config);
+        // Use a flag to prevent state updates if component unmounts
+        let isMounted = true;
+        
+        const initializeFirebaseAsync = async () => {
+            if (isMounted) {
+                await initFirebase(config);
+            }
+        };
+        
+        initializeFirebaseAsync();
+        
+        return () => {
+            isMounted = false;
+        };
     }, [config, initFirebase]);
 
     const updateConfig = (newConfig: FirebaseConfig) => {
+        // Validate config before saving
+        if (!newConfig || typeof newConfig !== 'object' || !newConfig.provider) {
+            console.error('Invalid config provided to updateConfig');
+            return;
+        }
+        
         setConfig(newConfig);
-        localStorage.setItem(CONFIG_KEY, JSON.stringify(newConfig));
+        try {
+            localStorage.setItem(CONFIG_KEY, JSON.stringify(newConfig));
+        } catch (error) {
+            console.error('Failed to save config to localStorage:', error);
+        }
     };
 
     return (

@@ -46,30 +46,26 @@ export class AppwriteService implements IDatabaseService {
 
         // Helper for running pool
         async function uploadDoc(row: any) {
-            try {
-                const response = await fetch(
-                    `${config.appwriteEndpoint}/databases/${config.appwriteDatabaseId}/collections/${config.collectionName}/documents`,
-                    {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json',
-                            'X-Appwrite-Project': config.appwriteProjectId || ''
-                        },
-                        body: JSON.stringify({
-                            documentId: 'unique()', // Appwrite ID generation
-                            data: row
-                        })
-                    }
-                );
-
-                if (!response.ok) {
-                    const err = await response.json();
-                    throw new Error(err.message);
+            const response = await fetch(
+                `${config.appwriteEndpoint}/databases/${config.appwriteDatabaseId}/collections/${config.collectionName}/documents`,
+                {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-Appwrite-Project': config.appwriteProjectId || ''
+                    },
+                    body: JSON.stringify({
+                        documentId: 'unique()', // Appwrite ID generation
+                        data: row
+                    })
                 }
-                return true;
-            } catch (e: any) {
-                throw e;
+            );
+
+            if (!response.ok) {
+                const err = await response.json();
+                throw new Error(err.message);
             }
+            return true;
         }
 
         // Simple chunking execution used for clarity (not true parallelism but safe)

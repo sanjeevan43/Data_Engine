@@ -22,8 +22,20 @@ export const DataGrid: React.FC<DataGridProps> = ({ data, onPurge, isPurging, co
 
     const exportToCSV = () => {
         if (data.length === 0) return;
+        
+        const sanitizeCSVValue = (value: any): string => {
+            const str = String(value || '');
+            // Prevent CSV injection by sanitizing values that start with dangerous characters
+            if (str.startsWith('=') || str.startsWith('+') || str.startsWith('-') || str.startsWith('@')) {
+                return `'${str}`; // Prefix with single quote to neutralize
+            }
+            return str.replace(/"/g, '""'); // Escape quotes
+        };
+        
         const headerRow = headers.join(',');
-        const rows = data.map(row => headers.map(h => `"${String(row[h] || '').replace(/"/g, '""')}"`).join(','));
+        const rows = data.map(row => 
+            headers.map(h => `"${sanitizeCSVValue(row[h])}"`).join(',')
+        );
         const csvContent = "data:text/csv;charset=utf-8," + [headerRow, ...rows].join("\n");
         const encodedUri = encodeURI(csvContent);
         const link = document.createElement("a");
@@ -101,11 +113,21 @@ export const DataGrid: React.FC<DataGridProps> = ({ data, onPurge, isPurging, co
                         <tbody className="divide-y divide-slate-50">
                             {filteredData.slice(0, 100).map((row, idx) => (
                                 <tr key={row.id || idx} className="hover:bg-blue-50/20 transition-colors group">
-                                    {headers.map(k => (
-                                        <td key={k} className="px-8 py-6 text-base font-bold text-slate-700 group-hover:text-blue-900">
-                                            {String(row[k] || '—')}
-                                        </td>
-                                    ))}
+                                    {headers.map(k => {
+                                        const cellValue = row[k] || '—';
+                                        // Sanitize the cell value to prevent XSS
+                                        const sanitizedValue = typeof cellValue === 'string' 
+                                            ? cellValue.replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#x27;')
+                                            : String(cellValue);
+                                        
+                                        return (
+                                            <td key={k} className="px-8 py-6 text-base font-bold text-slate-700 group-hover:text-blue-900">
+                                                <span title={String(cellValue)}>
+                                                    {sanitizedValue.length > 50 ? `${sanitizedValue.substring(0, 50)}...` : sanitizedValue}
+                                                </span>
+                                            </td>
+                                        );
+                                    })}
                                 </tr>
                             ))}
                         </tbody>

@@ -34,7 +34,7 @@ export default function HomePage() {
                     </div>
                     <div>
                         <h1 className="text-7xl font-black text-transparent bg-clip-text bg-gradient-to-r from-blue-400 via-purple-400 to-pink-400 mb-2">
-                            Data Engine
+                            SmartImport
                         </h1>
                         <div className="flex items-center gap-2 justify-center">
                             <div className="h-1 w-12 bg-gradient-to-r from-blue-400 to-purple-400 rounded-full" />
