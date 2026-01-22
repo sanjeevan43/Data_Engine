@@ -24,6 +24,48 @@ const DATABASES: DatabaseOption[] = [
         icon: <Server className="w-6 h-6" />
     },
     {
+        name: "MongoDB",
+        type: "NoSQL",
+        description: "Document-oriented database designed for scalability and flexibility",
+        icon: <HardDrive className="w-6 h-6" />
+    },
+    {
+        name: "Hostinger MySQL",
+        type: "SQL",
+        description: "Hostinger's managed MySQL database with high performance and reliability",
+        icon: <Server className="w-6 h-6" />
+    },
+    {
+        name: "PostgreSQL",
+        type: "SQL",
+        description: "Advanced open-source relational database with powerful features",
+        icon: <Database className="w-6 h-6" />
+    },
+    {
+        name: "MySQL",
+        type: "SQL",
+        description: "Popular open-source relational database management system",
+        icon: <Database className="w-6 h-6" />
+    },
+    {
+        name: "Airtable",
+        type: "NoSQL",
+        description: "Spreadsheet-database hybrid with powerful API and collaboration features",
+        icon: <Folder className="w-6 h-6" />
+    },
+    {
+        name: "Notion",
+        type: "NoSQL",
+        description: "All-in-one workspace with database capabilities and rich content",
+        icon: <Folder className="w-6 h-6" />
+    },
+    {
+        name: "Google Sheets",
+        type: "NoSQL",
+        description: "Cloud-based spreadsheet with API access for simple data storage",
+        icon: <Cloud className="w-6 h-6" />
+    },
+    {
         name: "Appwrite",
         type: "NoSQL",
         description: "Self-hostable backend platform with database and authentication services",
@@ -36,16 +78,28 @@ const DATABASES: DatabaseOption[] = [
         icon: <Cpu className="w-6 h-6" />
     },
     {
-        name: "MongoDB",
-        type: "NoSQL",
-        description: "Document-oriented database designed for scalability and flexibility",
-        icon: <HardDrive className="w-6 h-6" />
-    },
-    {
         name: "PocketBase",
         type: "SQLite",
         description: "Lightweight SQLite-based backend for small and embedded applications",
         icon: <Folder className="w-6 h-6" />
+    },
+    {
+        name: "Xano",
+        type: "SQL",
+        description: "No-code backend with PostgreSQL database and powerful API builder",
+        icon: <Server className="w-6 h-6" />
+    },
+    {
+        name: "Nhost",
+        type: "SQL",
+        description: "Open-source Firebase alternative with PostgreSQL and GraphQL",
+        icon: <Database className="w-6 h-6" />
+    },
+    {
+        name: "Convex",
+        type: "NoSQL",
+        description: "Real-time backend with reactive queries and serverless functions",
+        icon: <Cloud className="w-6 h-6" />
     }
 ];
 

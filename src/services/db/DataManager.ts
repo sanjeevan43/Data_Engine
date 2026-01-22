@@ -12,7 +12,7 @@ export class DataManager {
      */
     static async testConnection(config: PipelineConfig): Promise<boolean> {
         try {
-            const service = DatabaseServiceFactory.getService(config.provider);
+            const service = DatabaseServiceFactory.getService(config.provider, config);
             return await service.testConnection(config);
         } catch (error: any) {
             console.error('Connection test error:', error);
@@ -46,7 +46,7 @@ export class DataManager {
         }
 
         try {
-            const service = DatabaseServiceFactory.getService(config.provider);
+            const service = DatabaseServiceFactory.getService(config.provider, config);
             return await service.importData(data, config, (count) => {
                 if (onProgress) {
                     onProgress(count, data.length);
@@ -67,7 +67,7 @@ export class DataManager {
      */
     static async fetchData(config: PipelineConfig): Promise<DatabaseRecord[]> {
         try {
-            const service = DatabaseServiceFactory.getService(config.provider);
+            const service = DatabaseServiceFactory.getService(config.provider, config);
             return await service.fetchData(config);
         } catch (error: any) {
             console.error('Fetch error:', error);
@@ -80,7 +80,7 @@ export class DataManager {
      */
     static async purgeData(config: PipelineConfig): Promise<void> {
         try {
-            const service = DatabaseServiceFactory.getService(config.provider);
+            const service = DatabaseServiceFactory.getService(config.provider, config);
 
             if (service.purgeData) {
                 await service.purgeData(config);
@@ -94,23 +94,23 @@ export class DataManager {
     }
 
     /**
-     * Save configuration to local storage
+     * Save configuration to session storage (clears on browser close)
      */
     static saveConfig(config: PipelineConfig, storageKey: string = 'fci_user_config_v4'): void {
         try {
-            localStorage.setItem(storageKey, JSON.stringify(config));
+            sessionStorage.setItem(storageKey, JSON.stringify(config));
         } catch (error: any) {
             console.error('Failed to save configuration:', error);
-            throw new Error('Failed to save configuration to local storage');
+            throw new Error('Failed to save configuration to session storage');
         }
     }
 
     /**
-     * Load configuration from local storage
+     * Load configuration from session storage
      */
     static loadConfig(storageKey: string = 'fci_user_config_v4'): PipelineConfig | null {
         try {
-            const saved = localStorage.getItem(storageKey);
+            const saved = sessionStorage.getItem(storageKey);
             return saved ? JSON.parse(saved) : null;
         } catch (error: any) {
             console.error('Failed to load configuration:', error);
@@ -119,11 +119,11 @@ export class DataManager {
     }
 
     /**
-     * Clear configuration from local storage
+     * Clear configuration from session storage
      */
     static clearConfig(storageKey: string = 'fci_user_config_v4'): void {
         try {
-            localStorage.removeItem(storageKey);
+            sessionStorage.removeItem(storageKey);
             DatabaseServiceFactory.clearCache();
         } catch (error: any) {
             console.error('Failed to clear configuration:', error);

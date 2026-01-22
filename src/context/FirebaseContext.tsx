@@ -3,7 +3,22 @@ import type { ReactNode } from 'react';
 import { initializeApp, getApp, getApps, deleteApp } from 'firebase/app';
 import { getFirestore, Firestore } from 'firebase/firestore';
 
-export type DatabaseProvider = 'Firebase' | 'Supabase' | 'Appwrite' | 'AWS Amplify' | 'MongoDB' | 'PocketBase';
+export type DatabaseProvider = 
+    | 'Firebase' 
+    | 'Supabase' 
+    | 'Appwrite' 
+    | 'AWS Amplify' 
+    | 'MongoDB' 
+    | 'PocketBase'
+    | 'Hostinger MySQL'
+    | 'PostgreSQL'
+    | 'MySQL'
+    | 'Airtable'
+    | 'Notion'
+    | 'Google Sheets'
+    | 'Xano'
+    | 'Nhost'
+    | 'Convex';
 
 export interface PipelineConfig {
     provider: DatabaseProvider;
@@ -29,7 +44,7 @@ export interface PipelineConfig {
 
     // PocketBase
     pocketbaseUrl?: string;
-    pocketbaseCollection?: string; // Often different naming conventions
+    pocketbaseCollection?: string;
 
     // MongoDB (Data API)
     mongoApiUrl?: string;
@@ -41,6 +56,59 @@ export interface PipelineConfig {
     amplifyApiUrl?: string;
     amplifyApiKey?: string;
     amplifyRegion?: string;
+
+    // Hostinger MySQL / MySQL / PostgreSQL
+    hostingerHost?: string;
+    hostingerPort?: string;
+    hostingerDatabase?: string;
+    hostingerUsername?: string;
+    hostingerPassword?: string;
+    hostingerTable?: string;
+    
+    // Generic MySQL/PostgreSQL
+    mysqlHost?: string;
+    mysqlPort?: string;
+    mysqlDatabase?: string;
+    mysqlUsername?: string;
+    mysqlPassword?: string;
+    mysqlTable?: string;
+    
+    postgresHost?: string;
+    postgresPort?: string;
+    postgresDatabase?: string;
+    postgresUsername?: string;
+    postgresPassword?: string;
+    postgresTable?: string;
+
+    // Airtable
+    airtableApiKey?: string;
+    airtableBaseId?: string;
+    airtableTableName?: string;
+
+    // Notion
+    notionApiKey?: string;
+    notionDatabaseId?: string;
+
+    // Google Sheets
+    googleSheetsApiKey?: string;
+    googleSpreadsheetId?: string;
+    googleSheetName?: string;
+
+    // Xano
+    xanoApiUrl?: string;
+    xanoApiKey?: string;
+    xanoTableName?: string;
+
+    // Nhost
+    nhostSubdomain?: string;
+    nhostRegion?: string;
+    nhostApiKey?: string;
+    nhostTableName?: string;
+
+    // Convex
+    convexUrl?: string;
+    convexDeploymentKey?: string;
+    convexTableName?: string;
 }
 
 export type FirebaseConfig = PipelineConfig; // Alias for backward compatibility
@@ -54,7 +122,7 @@ interface FirebaseContextType {
     isValidated: boolean; // True if we successfully initialized
 }
 
-const CONFIG_KEY = 'fci_user_config_v4';
+const CONFIG_KEY = 'fci_user_config_v4'; // Using sessionStorage - clears on browser close
 
 const defaultContext: FirebaseContextType = {
     db: null,
@@ -86,7 +154,7 @@ export const FirebaseProvider = ({ children }: { children: ReactNode }) => {
 
     const [config, setConfig] = useState<FirebaseConfig>(() => {
         try {
-            const saved = localStorage.getItem(CONFIG_KEY);
+            const saved = sessionStorage.getItem(CONFIG_KEY);
             if (saved) {
                 const parsed = JSON.parse(saved);
                 // Validate that parsed config has required structure
@@ -95,7 +163,7 @@ export const FirebaseProvider = ({ children }: { children: ReactNode }) => {
                 }
             }
         } catch (error) {
-            console.warn('Failed to parse saved config from localStorage:', error);
+            console.warn('Failed to parse saved config from sessionStorage:', error);
         }
         return defaultContext.config;
     });
@@ -140,15 +208,15 @@ export const FirebaseProvider = ({ children }: { children: ReactNode }) => {
     useEffect(() => {
         // Use a flag to prevent state updates if component unmounts
         let isMounted = true;
-        
+
         const initializeFirebaseAsync = async () => {
             if (isMounted) {
                 await initFirebase(config);
             }
         };
-        
+
         initializeFirebaseAsync();
-        
+
         return () => {
             isMounted = false;
         };
@@ -160,12 +228,12 @@ export const FirebaseProvider = ({ children }: { children: ReactNode }) => {
             console.error('Invalid config provided to updateConfig');
             return;
         }
-        
+
         setConfig(newConfig);
         try {
-            localStorage.setItem(CONFIG_KEY, JSON.stringify(newConfig));
+            sessionStorage.setItem(CONFIG_KEY, JSON.stringify(newConfig));
         } catch (error) {
-            console.error('Failed to save config to localStorage:', error);
+            console.error('Failed to save config to sessionStorage:', error);
         }
     };
 

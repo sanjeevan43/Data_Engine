@@ -1,18 +1,19 @@
-# Data Engine - AI-Powered CSV Importer
+# DataFlow - Enterprise Data Import Platform
 
-A powerful web application for importing CSV data to multiple databases with intelligent AI-powered data cleaning and validation.
+A powerful enterprise-grade web application for importing CSV data to 15+ databases with intelligent AI-powered data cleaning and validation.
 
-![Data Engine](public/logo.png)
+![DataFlow](public/logo.svg)
 
 ## ✨ Features
 
 - 🤖 **Real AI-Powered Processing** - Uses Transformers.js for intelligent semantic matching
 - 📤 **Multiple File Upload** - Upload and process many CSV files at once
-- 🗄️ **Multi-Database Support** - Firebase, Supabase, MongoDB, AWS Amplify, Appwrite, PocketBase
+- 🗄️ **15+ Database Support** - Firebase, Supabase, MongoDB, Hostinger MySQL, PostgreSQL, Airtable, Google Sheets, and more
 - 📊 **Smart Field Mapping** - AI-powered CSV header to database field matching
 - ✅ **Data Validation** - Comprehensive validation with detailed error reporting
 - 📈 **Real-time Statistics** - Track import progress and data quality
 - 🆓 **100% Free** - No API keys needed, runs entirely in your browser
+- 🏢 **Enterprise Ready** - Professional-grade reliability and performance
 
 ## 🚀 Quick Start
 
@@ -60,12 +61,26 @@ The AI system automatically:
 
 ## 🗄️ Supported Databases
 
+**SQL Databases:**
+- Hostinger MySQL
+- PostgreSQL
+- MySQL
+- Supabase (PostgreSQL)
+- Xano
+- Nhost
+
+**NoSQL Databases:**
 - Firebase Firestore
-- Supabase
 - MongoDB
-- AWS Amplify
+- Airtable
+- Notion
 - Appwrite
-- PocketBase
+- AWS Amplify
+- Convex
+
+**Other Platforms:**
+- Google Sheets
+- PocketBase (SQLite)
 
 ## 🚀 Deploy to Vercel
 

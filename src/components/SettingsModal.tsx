@@ -23,7 +23,23 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ onClose, initialPr
         onClose();
     };
 
-    const providers: DatabaseProvider[] = ['Firebase', 'Supabase', 'Appwrite', 'AWS Amplify', 'MongoDB', 'PocketBase'];
+    const providers: DatabaseProvider[] = [
+        'Firebase', 
+        'Supabase', 
+        'MongoDB',
+        'Hostinger MySQL',
+        'PostgreSQL',
+        'MySQL',
+        'Airtable',
+        'Google Sheets',
+        'Appwrite', 
+        'AWS Amplify',
+        'PocketBase',
+        'Notion',
+        'Xano',
+        'Nhost',
+        'Convex'
+    ];
 
     const firebaseFields = [
         { id: 'apiKey', label: 'API Key', icon: <Key className="w-4 h-4" />, type: 'password' },
