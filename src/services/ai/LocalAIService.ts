@@ -32,8 +32,8 @@ export class LocalAIService {
                 this.embedder = await pipeline(
                     'feature-extraction',
                     'Xenova/all-MiniLM-L6-v2',
-                    { quantized: true } // Use quantized model for faster loading
-                );
+                    { quantized: true }
+                ) as Pipeline;
 
                 this.initialized = true;
                 console.log('✅ Local AI models loaded successfully!');

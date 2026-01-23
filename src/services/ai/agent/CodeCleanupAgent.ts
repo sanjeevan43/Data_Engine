@@ -41,7 +41,7 @@ export class CodeCleanupAgent {
 
     constructor(llmConfig?: LLMConfig) {
         if (llmConfig?.apiKey) {
-            this.llmService = new GeminiService(llmConfig.apiKey);
+            this.llmService = new GeminiService({ apiKey: llmConfig.apiKey });
         }
     }
 
@@ -463,7 +463,7 @@ Return JSON array of issues with format:
 }]`;
 
         try {
-            const response = await this.llmService.generateText(prompt);
+            const response = await this.llmService.chat([{ role: 'user', content: prompt }]);
             const jsonMatch = response.match(/\[[\s\S]*\]/);
             if (jsonMatch) {
                 const aiIssues = JSON.parse(jsonMatch[0]);

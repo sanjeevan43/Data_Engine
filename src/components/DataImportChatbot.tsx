@@ -4,7 +4,7 @@
  */
 
 import React, { useState, useRef, useEffect } from 'react';
-import { MessageCircle, Send, X, Sparkles, Key, CheckCircle, UploadCloud, Loader } from 'lucide-react';
+import { Send, X, Sparkles, Key, CheckCircle, UploadCloud, Loader } from 'lucide-react';
 import { LocalAIService } from '../services/ai/LocalAIService';
 import type { ChatMessage } from '../services/ai/LocalAIService';
 

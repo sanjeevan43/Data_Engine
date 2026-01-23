@@ -19,7 +19,7 @@ export class HostingerService implements IDatabaseService {
         this.apiEndpoint = config.hostingerHost || '';
     }
 
-    async testConnection(config: PipelineConfig): Promise<boolean> {
+    async testConnection(): Promise<boolean> {
         try {
             const response = await fetch(`${this.apiEndpoint}/test`, {
                 method: 'POST',
@@ -44,7 +44,6 @@ export class HostingerService implements IDatabaseService {
 
     async importData(
         data: Array<Record<string, any>>,
-        config: PipelineConfig,
         onProgress?: (count: number) => void
     ): Promise<ImportResult> {
         const total = data.length;
@@ -103,7 +102,7 @@ export class HostingerService implements IDatabaseService {
         }
     }
 
-    async fetchData(config: PipelineConfig): Promise<Array<Record<string, any>>> {
+    async fetchData(): Promise<Array<Record<string, any>>> {
         try {
             const response = await fetch(`${this.apiEndpoint}/query`, {
                 method: 'POST',
@@ -132,7 +131,7 @@ export class HostingerService implements IDatabaseService {
         }
     }
 
-    async purgeData(config: PipelineConfig): Promise<void> {
+    async purgeData(): Promise<void> {
         try {
             const response = await fetch(`${this.apiEndpoint}/truncate`, {
                 method: 'POST',

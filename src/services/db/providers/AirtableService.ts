@@ -23,7 +23,7 @@ export class AirtableService implements IDatabaseService {
         };
     }
 
-    async testConnection(config: PipelineConfig): Promise<boolean> {
+    async testConnection(): Promise<boolean> {
         try {
             const response = await fetch(this.baseUrl, {
                 method: 'GET',
@@ -39,7 +39,6 @@ export class AirtableService implements IDatabaseService {
 
     async importData(
         data: Array<Record<string, any>>,
-        config: PipelineConfig,
         onProgress?: (count: number) => void
     ): Promise<ImportResult> {
         const total = data.length;
@@ -96,7 +95,7 @@ export class AirtableService implements IDatabaseService {
         }
     }
 
-    async fetchData(config: PipelineConfig): Promise<Array<Record<string, any>>> {
+    async fetchData(): Promise<Array<Record<string, any>>> {
         try {
             const allRecords: Array<Record<string, any>> = [];
             let offset: string | undefined;
@@ -134,7 +133,7 @@ export class AirtableService implements IDatabaseService {
         }
     }
 
-    async purgeData(config: PipelineConfig): Promise<void> {
+    async purgeData(): Promise<void> {
         try {
             // Fetch all record IDs
             const records = await this.fetchData();

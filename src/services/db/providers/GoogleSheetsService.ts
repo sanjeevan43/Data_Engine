@@ -23,7 +23,7 @@ export class GoogleSheetsService implements IDatabaseService {
         };
     }
 
-    async testConnection(config: PipelineConfig): Promise<boolean> {
+    async testConnection(): Promise<boolean> {
         try {
             const response = await fetch(this.baseUrl, {
                 method: 'GET',
@@ -39,7 +39,6 @@ export class GoogleSheetsService implements IDatabaseService {
 
     async importData(
         data: Array<Record<string, any>>,
-        config: PipelineConfig,
         onProgress?: (count: number) => void
     ): Promise<ImportResult> {
         const total = data.length;

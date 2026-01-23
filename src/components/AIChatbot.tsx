@@ -1,15 +1,15 @@
 import { useState, useRef, useEffect } from 'react';
-import { MessageCircle, Send, X, Sparkles, AlertCircle, Settings } from 'lucide-react';
-import { getGeminiService, ChatMessage } from '../services/ai/GeminiService';
+import { Send, X, Sparkles, AlertCircle, Settings } from 'lucide-react';
+import { getGeminiService, type ChatMessage } from '../services/ai/GeminiService';
 
 interface AIChatbotProps {
     csvHeaders?: string[];
     sampleRows?: any[][];
     currentMapping?: Record<string, string>;
-    onApplySuggestion?: (suggestion: any) => void;
+
 }
 
-export function AIChatbot({ csvHeaders, sampleRows, currentMapping, onApplySuggestion }: AIChatbotProps) {
+export function AIChatbot({ csvHeaders, sampleRows, currentMapping }: AIChatbotProps) {
     const [isOpen, setIsOpen] = useState(false);
     const [messages, setMessages] = useState<ChatMessage[]>([
         {
