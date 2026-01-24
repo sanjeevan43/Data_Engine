@@ -12,7 +12,7 @@ import type {
     ValidationError,
     ValidationResult,
     NormalizationSuggestion
-} from '../types/schema';
+} from '../../types/schema';
 
 // ============================================
 // PRIMARY KEY VALIDATOR
@@ -212,7 +212,7 @@ export class ForeignKeyValidator {
         const collectionRef = collection(db, collectionName);
         const snapshot = await getDocs(collectionRef);
 
-        snapshot.forEach((docSnap: any) => {
+        snapshot.forEach(docSnap => {
             const data = docSnap.data();
             const keyValue = pkField === 'id' ? docSnap.id : data[pkField];
             if (keyValue) {
@@ -241,7 +241,7 @@ export class ForeignKeyValidator {
         const collectionRef = collection(db, collectionName);
         const snapshot = await getDocs(collectionRef);
 
-        snapshot.forEach((docSnap: any) => {
+        snapshot.forEach(docSnap => {
             const data = docSnap.data();
             const fkValue = data[fkConfig.sourceColumn];
 
@@ -550,7 +550,7 @@ export class NormalizationAnalyzer {
     /**
      * Check for Second Normal Form violations
      */
-    private static check2NF(data: any[], schema: CollectionSchema): NormalizationSuggestion['issues'] {
+    private static check2NF(_data: any[], schema: CollectionSchema): NormalizationSuggestion['issues'] {
         const issues: NormalizationSuggestion['issues'] = [];
 
         // 2NF only applies to tables with composite keys
@@ -560,8 +560,8 @@ export class NormalizationAnalyzer {
 
         // Check for partial dependencies
         // (This is a simplified check - full analysis would require dependency analysis)
-        const compositeColumns = schema.primaryKey.compositeColumns || [];
-        const nonKeyFields = schema.fields.filter((f: any) => !compositeColumns.includes(f.name));
+        // const compositeColumns = schema.primaryKey.compositeColumns || [];
+        // const _nonKeyFields = schema.fields.filter((field) => !compositeColumns.includes(field.name));
 
         // Look for fields that depend on only part of the composite key
         // This would require analyzing actual data dependencies
@@ -572,11 +572,11 @@ export class NormalizationAnalyzer {
     /**
      * Check for Third Normal Form violations
      */
-    private static check3NF(data: any[], schema: CollectionSchema): NormalizationSuggestion['issues'] {
+    private static check3NF(_data: any[], schema: CollectionSchema): NormalizationSuggestion['issues'] {
         const issues: NormalizationSuggestion['issues'] = [];
 
         // Look for duplicate data patterns that suggest transitive dependencies
-        const duplicatePatterns = this.findDuplicatePatterns(data, schema);
+        const duplicatePatterns = this.findDuplicatePatterns(_data, schema);
 
         duplicatePatterns.forEach(pattern => {
             issues.push({

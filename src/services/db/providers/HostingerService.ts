@@ -44,6 +44,7 @@ export class HostingerService implements IDatabaseService {
 
     async importData(
         data: Array<Record<string, any>>,
+        config: PipelineConfig,
         onProgress?: (count: number) => void
     ): Promise<ImportResult> {
         const total = data.length;
@@ -65,12 +66,12 @@ export class HostingerService implements IDatabaseService {
                             'Content-Type': 'application/json',
                         },
                         body: JSON.stringify({
-                            host: this.config.hostingerHost,
-                            port: this.config.hostingerPort || '3306',
-                            database: this.config.hostingerDatabase,
-                            username: this.config.hostingerUsername,
-                            password: this.config.hostingerPassword,
-                            table: this.config.hostingerTable || this.config.collectionName,
+                            host: config.hostingerHost,
+                            port: config.hostingerPort || '3306',
+                            database: config.hostingerDatabase,
+                            username: config.hostingerUsername,
+                            password: config.hostingerPassword,
+                            table: config.hostingerTable || config.collectionName,
                             data: batch,
                         }),
                     });

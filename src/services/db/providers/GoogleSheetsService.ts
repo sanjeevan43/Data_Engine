@@ -39,6 +39,7 @@ export class GoogleSheetsService implements IDatabaseService {
 
     async importData(
         data: Array<Record<string, any>>,
+        _config: PipelineConfig,
         onProgress?: (count: number) => void
     ): Promise<ImportResult> {
         const total = data.length;
