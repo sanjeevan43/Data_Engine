@@ -1,8 +1,8 @@
-# DataFlow - Enterprise Data Import Platform
+# OmniFlow - Enterprise Data Import Platform
 
 A powerful enterprise-grade web application for importing CSV data to 15+ databases with intelligent AI-powered data cleaning and validation.
 
-![DataFlow](public/logo.svg)
+![OmniFlow](public/logo.svg)
 
 ## ✨ Features
 

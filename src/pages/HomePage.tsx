@@ -1,84 +1,109 @@
 import { useNavigate } from 'react-router-dom';
-import { Database, Sparkles } from 'lucide-react';
+import { Database, Sparkles, ChevronRight, Zap, Target, Shield } from 'lucide-react';
 import { SupportedDatabases } from '../components/SupportedDatabases';
 
-
-/**
- * Landing page – shows the hero section and a "Get Started" button.
- * Clicking the button navigates to the main application page (`/app`).
- */
 export default function HomePage() {
     const navigate = useNavigate();
 
-    const onGetStarted = () => {
-        navigate('/app');
-    };
-
     return (
-        <div className="min-h-screen bg-gradient-to-br from-slate-900 via-indigo-900 to-violet-900 relative overflow-hidden">
-            {/* Animated background blobs */}
-            <div className="absolute inset-0 overflow-hidden pointer-events-none">
-                <div className="absolute top-0 left-1/4 w-96 h-96 bg-indigo-500/10 rounded-full blur-3xl animate-blob" />
-                <div className="absolute top-1/3 right-1/4 w-96 h-96 bg-violet-500/10 rounded-full blur-3xl animate-blob animation-delay-2000" />
-                <div className="absolute bottom-0 left-1/2 w-96 h-96 bg-purple-500/10 rounded-full blur-3xl animate-blob animation-delay-4000" />
-            </div>
+        <div className="min-h-screen bg-black text-white relative selection:bg-cyan-500/30">
+            {/* Ultra Modern Background Grid */}
+            <div className="absolute inset-0 bg-[linear-gradient(to_right,#4f4f4f1a_1px,transparent_1px),linear-gradient(to_bottom,#4f4f4f1a_1px,transparent_1px)] bg-[size:4rem_4rem] [mask-image:radial-gradient(ellipse_80%_50%_at_50%_0%,#000_70%,transparent_100%)] pointer-events-none" />
+            
+            {/* Ambient Glow */}
+            <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[800px] h-[400px] bg-cyan-500/10 blur-[120px] rounded-full pointer-events-none" />
 
-            <main className="relative z-10 max-w-7xl mx-auto px-6 py-24 -mt-20 text-center">
-                <div className="inline-flex items-center justify-center gap-5 mb-8">
-                    <div className="relative group">
-                        <div className="absolute inset-0 bg-gradient-to-r from-indigo-400 via-violet-500 to-purple-500 rounded-3xl blur-2xl opacity-60 group-hover:opacity-80 transition-opacity" />
-                        <div className="relative bg-gradient-to-br from-indigo-600 via-violet-600 to-purple-600 p-5 rounded-3xl shadow-2xl">
-                            <Database className="w-14 h-14 text-white" />
-                            <Sparkles className="w-7 h-7 text-amber-300 absolute -top-3 -right-3 animate-pulse" />
-                        </div>
+            {/* Glowing Top Border */}
+            <div className="h-1 w-full bg-gradient-to-r from-transparent via-cyan-500 to-transparent opacity-50 absolute top-0" />
+
+            {/* Navigation / Header */}
+            <header className="relative z-20 flex items-center justify-between px-8 py-6 max-w-7xl mx-auto">
+                <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 bg-black border border-white/10 rounded-xl flex items-center justify-center shadow-[0_0_15px_rgba(6,182,212,0.5)] relative overflow-hidden group">
+                        <div className="absolute inset-0 bg-gradient-to-tr from-cyan-500/20 to-blue-500/20 opacity-0 group-hover:opacity-100 transition-opacity" />
+                        <Database className="w-5 h-5 text-cyan-400 group-hover:scale-110 transition-transform" />
                     </div>
-                    <div>
-                        <h1 className="text-7xl font-black text-transparent bg-clip-text bg-gradient-to-r from-indigo-400 via-violet-400 to-purple-400 mb-2">
-                            DataFlow
-                        </h1>
-                        <div className="flex items-center gap-2 justify-center">
-                            <div className="h-1 w-12 bg-gradient-to-r from-indigo-400 to-violet-400 rounded-full" />
-                            <span className="text-indigo-300 font-bold text-sm uppercase tracking-wider">Enterprise Grade</span>
-                            <div className="h-1 w-12 bg-gradient-to-r from-violet-400 to-purple-400 rounded-full" />
-                        </div>
-                    </div>
+                    <span className="text-xl font-bold tracking-tight text-white">Omni<span className="text-cyan-400">Flow</span></span>
+                </div>
+                
+                <div className="hidden md:flex items-center gap-8 text-sm font-medium text-zinc-400">
+                    <a href="#features" className="hover:text-white transition-colors">Features</a>
+                    <a href="#databases" className="hover:text-white transition-colors">Integrations</a>
+                    <a href="#security" className="hover:text-white transition-colors">Security</a>
                 </div>
 
-                <p className="text-3xl text-white font-bold mb-6 max-w-3xl mx-auto">
-                    Enterprise Data Import & Validation Platform
-                </p>
-                <p className="text-xl text-indigo-200 max-w-2xl mx-auto mb-10">
-                    Seamlessly import, validate, and transform data across 15+ databases with AI-powered intelligence
-                </p>
-
-                {/* Feature pills */}
-                <div className="flex items-center justify-center gap-4 flex-wrap mb-12">
-                    <div className="glass bg-white/10 backdrop-blur-md px-6 py-3 rounded-full border border-white/20 flex items-center gap-2">
-                        <Sparkles className="w-5 h-5 text-amber-400" />
-                        <span className="text-white font-semibold">Enterprise Ready</span>
-                    </div>
-                    <div className="glass bg-white/10 backdrop-blur-md px-6 py-3 rounded-full border border-white/20 flex items-center gap-2">
-                        <Database className="w-5 h-5 text-emerald-400" />
-                        <span className="text-white font-semibold">15+ Databases</span>
-                    </div>
-                    <div className="glass bg-white/10 backdrop-blur-md px-6 py-3 rounded-full border border-white/20 flex items-center gap-2">
-                        <Sparkles className="w-5 h-5 text-violet-400" />
-                        <span className="text-white font-semibold">AI-Powered</span>
-                    </div>
-                </div>
-
-                <button
-                    onClick={onGetStarted}
-                    className="group px-10 py-5 bg-gradient-to-r from-indigo-600 to-violet-600 text-white rounded-2xl font-black text-xl shadow-2xl hover:shadow-indigo-500/50 transform hover:scale-105 transition-all flex items-center gap-3 mx-auto"
+                <button 
+                    onClick={() => navigate('/login')}
+                    className="text-sm font-semibold px-5 py-2.5 bg-white text-black rounded-lg hover:bg-zinc-200 transition-colors flex items-center gap-2"
                 >
-                    Get Started
-                    <Sparkles className="w-5 h-5 group-hover:rotate-12 transition-transform" />
+                    Sign In
                 </button>
+            </header>
 
-                {/* Supported databases preview */}
-                <div className="mt-16 pt-12 border-t border-white/10">
-                    <h4 className="text-center text-sm font-black text-indigo-300 uppercase tracking-widest mb-8">Supported Platforms</h4>
-                    <SupportedDatabases onSelectDatabase={() => { }} />
+            <main className="relative z-10 pt-32 pb-24 text-center px-4">
+                {/* Badge */}
+                <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full border border-white/10 bg-white/5 backdrop-blur-md mb-8 hover:bg-white/10 transition-colors cursor-default">
+                    <Sparkles className="w-4 h-4 text-cyan-400" />
+                    <span className="text-sm font-medium text-zinc-300">OmniFlow Engine 2.0 is live</span>
+                </div>
+
+                {/* Hero Text */}
+                <h1 className="text-6xl md:text-8xl font-black tracking-tighter max-w-5xl mx-auto leading-[1.1] mb-8">
+                    The Modern Engine for <br />
+                    <span className="block mt-2 text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 via-blue-500 to-purple-600">
+                        Enterprise Data Import.
+                    </span>
+                </h1>
+
+                <p className="text-xl text-zinc-400 max-w-2xl mx-auto mb-12 font-medium">
+                    Seamlessly move, transform, and validate your data across 15+ databases with zero configuration, powered by intelligent auto-mapping.
+                </p>
+
+                {/* CTA Buttons */}
+                <div className="flex flex-col sm:flex-row items-center justify-center gap-4 mb-24">
+                    <button
+                        onClick={() => navigate('/signup')}
+                        className="group relative px-8 py-4 bg-white text-black rounded-xl font-bold text-lg hover:scale-[1.02] active:scale-95 transition-all w-full sm:w-auto flex items-center justify-center gap-3 shadow-[0_0_40px_rgba(255,255,255,0.2)]"
+                    >
+                        Start Processing Free
+                        <ChevronRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
+                    </button>
+                    <button
+                        onClick={() => navigate('/cleanup')}
+                        className="group px-8 py-4 bg-transparent text-white border border-white/20 hover:border-white/40 hover:bg-white/5 rounded-xl font-bold text-lg hover:scale-[1.02] active:scale-95 transition-all w-full sm:w-auto flex items-center justify-center gap-3"
+                    >
+                        Code Cleanup Agent
+                    </button>
+                </div>
+
+                {/* Micro Features */}
+                <div id="features" className="max-w-6xl mx-auto grid grid-cols-1 md:grid-cols-3 gap-6 pt-16 border-t border-white/10">
+                    <div className="p-8 rounded-3xl bg-zinc-900/50 border border-white/5 text-left hover:border-cyan-500/30 transition-colors group">
+                        <div className="w-12 h-12 bg-cyan-500/10 rounded-2xl flex items-center justify-center mb-6 border border-cyan-500/20 group-hover:scale-110 transition-transform">
+                            <Zap className="w-6 h-6 text-cyan-400" />
+                        </div>
+                        <h3 className="text-xl font-bold mb-3">Lightning Fast</h3>
+                        <p className="text-zinc-400">Process millions of rows instantly with our optimized streaming architecture in the browser.</p>
+                    </div>
+                    <div className="p-8 rounded-3xl bg-zinc-900/50 border border-white/5 text-left hover:border-blue-500/30 transition-colors group">
+                        <div className="w-12 h-12 bg-blue-500/10 rounded-2xl flex items-center justify-center mb-6 border border-blue-500/20 group-hover:scale-110 transition-transform">
+                            <Target className="w-6 h-6 text-blue-400" />
+                        </div>
+                        <h3 className="text-xl font-bold mb-3">Smart Auto-Match</h3>
+                        <p className="text-zinc-400">Our AI maps dirty CSV columns to your pristine database schemas with 99.9% accuracy automatically.</p>
+                    </div>
+                    <div id="security" className="p-8 rounded-3xl bg-zinc-900/50 border border-white/5 text-left hover:border-purple-500/30 transition-colors group">
+                        <div className="w-12 h-12 bg-purple-500/10 rounded-2xl flex items-center justify-center mb-6 border border-purple-500/20 group-hover:scale-110 transition-transform">
+                            <Shield className="w-6 h-6 text-purple-400" />
+                        </div>
+                        <h3 className="text-xl font-bold mb-3">Zero Retention</h3>
+                        <p className="text-zinc-400">Your data never touches our servers. Pure client-side processing guarantees compliance and privacy.</p>
+                    </div>
+                </div>
+
+                {/* Databases Section */}
+                <div id="databases" className="mt-32 pt-16 border-t border-white/10">
+                    <SupportedDatabases onSelectDatabase={() => {}} />
                 </div>
             </main>
         </div>

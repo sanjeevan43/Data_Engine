@@ -19,12 +19,12 @@ export const Stats: React.FC<StatsProps> = ({ isDbConnected, totalStorage, colle
     return (
         <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
             {stats.map((s, i) => (
-                <div key={i} className="bg-white p-8 rounded-3xl border shadow-xl flex items-center justify-between hover:scale-[1.02] transition-transform duration-300">
+                <div key={i} className="bg-zinc-900 border border-white/10 p-6 rounded-2xl flex items-center justify-between hover:scale-[1.02] hover:border-cyan-500/30 transition-all duration-300 group">
                     <div>
-                        <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">{s.label}</p>
-                        <p className="text-3xl font-black text-slate-900 truncate max-w-[120px]">{s.val}</p>
+                        <p className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest mb-1">{s.label}</p>
+                        <p className="text-3xl font-black text-white truncate max-w-[120px]">{s.val}</p>
                     </div>
-                    <div className={`p-4 rounded-2xl bg-gradient-to-br ${s.color} text-white shadow-lg`}>
+                    <div className="p-4 rounded-xl bg-black border border-white/5 text-zinc-300 group-hover:text-cyan-400 group-hover:border-cyan-500/20 transition-all shadow-[0_4px_20px_rgba(0,0,0,0.5)]">
                         {s.icon}
                     </div>
                 </div>

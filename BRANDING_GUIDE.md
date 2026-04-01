@@ -1,15 +1,15 @@
-# 🎨 DataFlow - Brand Identity Guide
+# 🎨 OmniFlow - Brand Identity Guide
 
 ## Brand Overview
 
-**DataFlow** is an enterprise-grade data import platform that combines professional reliability with cutting-edge AI technology. The brand conveys trust, sophistication, and innovation.
+**OmniFlow** is an enterprise-grade data import platform that combines professional reliability with cutting-edge AI technology. The brand conveys trust, sophistication, and innovation.
 
 ---
 
 ## Brand Name
 
 ### Primary Name
-**DataFlow**
+**OmniFlow**
 
 ### Tagline
 "Enterprise Data Import Platform"
@@ -290,17 +290,17 @@ background: linear-gradient(to right, #6366F1, #8B5CF6);
 ## File Naming
 
 ### Consistency
-- Use kebab-case: `dataflow-pro-logo.svg`
-- Include version: `dataflow-pro-logo-v1.svg`
-- Specify variant: `dataflow-pro-logo-white.svg`
+- Use kebab-case: `OmniFlow-pro-logo.svg`
+- Include version: `OmniFlow-pro-logo-v1.svg`
+- Specify variant: `OmniFlow-pro-logo-white.svg`
 
 ### Organization
 ```
 /branding
   /logos
-    - dataflow-pro-logo.svg
-    - dataflow-pro-logo-white.svg
-    - dataflow-pro-icon.svg
+    - OmniFlow-pro-logo.svg
+    - OmniFlow-pro-logo-white.svg
+    - OmniFlow-pro-icon.svg
   /colors
     - color-palette.png
   /screenshots
@@ -313,7 +313,7 @@ background: linear-gradient(to right, #6366F1, #8B5CF6);
 ## Brand Evolution
 
 ### Version History
-- **v1.0** (Current): DataFlow launch
+- **v1.0** (Current): OmniFlow launch
   - Indigo/Violet color scheme
   - Database flow icon
   - Enterprise positioning
@@ -329,8 +329,8 @@ background: linear-gradient(to right, #6366F1, #8B5CF6);
 ## Contact
 
 For brand guidelines questions or asset requests:
-- Email: brand@dataflowpro.com
-- Website: https://dataflowpro.com
+- Email: brand@OmniFlowpro.com
+- Website: https://OmniFlowpro.com
 
 ---
 

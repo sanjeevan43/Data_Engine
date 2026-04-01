@@ -2,6 +2,7 @@ import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import HomePage from './pages/HomePage';
 import MainApp from './pages/MainApp';
 import CodeCleanupPage from './pages/CodeCleanupPage';
+import AuthPage from './pages/AuthPage';
 
 /**
  * Top‑level router for the application.
@@ -15,6 +16,8 @@ function App() {
     <BrowserRouter>
       <Routes>
         <Route path="/" element={<HomePage />} />
+        <Route path="/login" element={<AuthPage initialMode="login" />} />
+        <Route path="/signup" element={<AuthPage initialMode="signup" />} />
         <Route path="/app" element={<MainApp />} />
         <Route path="/cleanup" element={<CodeCleanupPage />} />
         <Route path="*" element={<Navigate to="/" replace />} />

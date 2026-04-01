@@ -48,19 +48,19 @@ export const FileUpload: React.FC<FileUploadProps> = ({ onFileSelect }) => {
     };
 
     return (
-        <div className="relative">
+        <div className="relative w-full">
             {/* Animated background gradient */}
-            <div className="absolute -inset-1 bg-gradient-to-r from-blue-600 via-purple-600 to-pink-600 rounded-2xl opacity-20 blur-xl animate-pulse"></div>
+            <div className="absolute -inset-1 bg-gradient-to-r from-cyan-500 via-blue-500 to-purple-500 rounded-3xl opacity-20 blur-xl animate-pulse"></div>
 
             <div
                 onDrop={handleDrop}
                 onDragOver={handleDragOver}
                 onDragLeave={handleDragLeave}
-                className={`relative border-3 border-dashed rounded-2xl p-12 text-center transition-all duration-300 cursor-pointer group overflow-hidden ${isDragging
-                    ? 'border-blue-500 bg-blue-50 scale-105 shadow-2xl'
+                className={`relative border border-dashed rounded-[2rem] p-16 text-center transition-all duration-300 cursor-pointer group overflow-hidden ${isDragging
+                    ? 'border-cyan-500 bg-cyan-500/10 scale-[1.02] shadow-[0_0_40px_rgba(6,182,212,0.2)]'
                     : uploadedFiles.length > 0
-                        ? 'border-green-400 bg-green-50/50'
-                        : 'border-slate-300 bg-white hover:border-blue-400 hover:bg-blue-50/30 hover:shadow-xl'
+                        ? 'border-emerald-500/50 bg-emerald-500/10'
+                        : 'border-white/20 bg-black hover:border-cyan-400 hover:bg-cyan-500/5'
                     }`}
             >
                 {/* Shimmer effect on hover */}
@@ -89,18 +89,18 @@ export const FileUpload: React.FC<FileUploadProps> = ({ onFileSelect }) => {
                             </>
                         )}
 
-                        <div className={`p-6 rounded-full transition-all duration-300 ${uploadedFiles.length > 0
-                            ? 'bg-gradient-to-br from-green-400 to-emerald-500 shadow-lg shadow-green-500/50'
+                        <div className={`p-6 rounded-2xl transition-all duration-300 border ${uploadedFiles.length > 0
+                            ? 'bg-emerald-500/10 border-emerald-500/30 shadow-[0_0_30px_rgba(52,211,153,0.3)]'
                             : isDragging
-                                ? 'bg-gradient-to-br from-blue-500 to-purple-600 shadow-lg shadow-blue-500/50'
-                                : 'bg-gradient-to-br from-blue-100 to-purple-100 group-hover:from-blue-200 group-hover:to-purple-200'
+                                ? 'bg-cyan-500/20 border-cyan-500/50 shadow-[0_0_30px_rgba(6,182,212,0.3)]'
+                                : 'bg-zinc-900 border-white/10 group-hover:border-cyan-500/30'
                             }`}>
                             {uploadedFiles.length > 0 ? (
-                                <CheckCircle className="w-12 h-12 text-white" />
+                                <CheckCircle className="w-10 h-10 text-emerald-400" />
                             ) : isUploading ? (
-                                <div className="w-12 h-12 border-4 border-white border-t-transparent rounded-full animate-spin"></div>
+                                <div className="w-10 h-10 border-2 border-cyan-400 border-t-transparent rounded-full animate-spin"></div>
                             ) : (
-                                <Upload className={`w-12 h-12 transition-all duration-300 ${isDragging ? 'text-white animate-bounce' : 'text-blue-600 group-hover:text-purple-600'
+                                <Upload className={`w-10 h-10 transition-all duration-300 ${isDragging ? 'text-cyan-400 animate-bounce' : 'text-zinc-500 group-hover:text-cyan-400'
                                     }`} />
                             )}
                         </div>
@@ -108,46 +108,46 @@ export const FileUpload: React.FC<FileUploadProps> = ({ onFileSelect }) => {
 
                     {/* Text content */}
                     <div className="space-y-3">
-                        <h3 className={`text-2xl font-bold transition-all duration-300 ${uploadedFiles.length > 0
-                            ? 'text-green-700'
-                            : 'text-slate-800 group-hover:text-gradient-primary'
+                        <h3 className={`text-xl font-bold transition-all duration-300 ${uploadedFiles.length > 0
+                            ? 'text-emerald-400'
+                            : 'text-white group-hover:text-cyan-400'
                             }`}>
-                            {uploadedFiles.length > 0 ? `${uploadedFiles.length} File${uploadedFiles.length > 1 ? 's' : ''} Uploaded!` : isDragging ? 'Drop files here!' : 'Upload CSV Files'}
+                            {uploadedFiles.length > 0 ? `${uploadedFiles.length} File${uploadedFiles.length > 1 ? 's' : ''} Uploaded` : isDragging ? 'Drop files here' : 'Select CSV Files'}
                         </h3>
 
                         {uploadedFiles.length > 0 ? (
                             <div className="flex flex-col gap-2">
                                 {uploadedFiles.slice(0, 3).map((file, idx) => (
-                                    <div key={idx} className="flex items-center justify-center gap-2 text-green-600 bg-green-100 px-4 py-2 rounded-full">
+                                    <div key={idx} className="flex items-center justify-center gap-2 text-emerald-300 bg-emerald-500/10 border border-emerald-500/20 px-4 py-2 rounded-xl">
                                         <FileText className="w-4 h-4" />
                                         <span className="text-sm font-medium">{file.name}</span>
                                     </div>
                                 ))}
                                 {uploadedFiles.length > 3 && (
-                                    <div className="text-sm text-green-600 font-medium">
+                                    <div className="text-sm text-emerald-400 font-medium pt-2">
                                         +{uploadedFiles.length - 3} more file{uploadedFiles.length - 3 > 1 ? 's' : ''}
                                     </div>
                                 )}
                             </div>
                         ) : (
-                            <>
-                                <p className="text-slate-600 text-lg">
+                            <div className="space-y-4">
+                                <p className="text-zinc-400 text-sm">
                                     {isDragging ? (
-                                        'Release to upload'
+                                        'Release to select'
                                     ) : (
                                         <>
-                                            Drag and drop or{' '}
-                                            <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-purple-600 font-semibold">
+                                            Drag and drop your files or{' '}
+                                            <span className="text-cyan-400 font-semibold hover:underline">
                                                 browse
                                             </span>
                                         </>
                                     )}
                                 </p>
-                                <div className="flex items-center justify-center gap-2 text-xs text-slate-400 mt-4 bg-slate-50 px-4 py-2 rounded-full">
-                                    <FileText className="w-4 h-4" />
-                                    <span>Supported: CSV (UTF-8) • Multiple files allowed</span>
+                                <div className="inline-flex items-center justify-center gap-2 text-[11px] font-bold uppercase tracking-wider text-zinc-500 bg-zinc-900 border border-white/5 px-4 py-2 rounded-lg">
+                                    <FileText className="w-3 h-3" />
+                                    CSV (UTF-8) • Multiple Allowed
                                 </div>
-                            </>
+                            </div>
                         )}
                     </div>
                 </label>
@@ -155,13 +155,14 @@ export const FileUpload: React.FC<FileUploadProps> = ({ onFileSelect }) => {
                 {/* Upload more files button */}
                 {uploadedFiles.length > 0 && !isUploading && (
                     <button
-                        onClick={() => {
+                        onClick={(e) => {
+                            e.preventDefault();
                             const input = document.getElementById('csv-upload') as HTMLInputElement;
                             if (input) input.click();
                         }}
-                        className="mt-6 px-6 py-2 bg-white text-blue-600 font-semibold rounded-xl border-2 border-blue-200 hover:border-blue-400 hover:bg-blue-50 transition-all duration-300 hover:shadow-md"
+                        className="mt-8 px-6 py-2.5 bg-black text-white font-semibold rounded-xl border border-white/10 hover:border-cyan-500/50 hover:text-cyan-400 transition-all duration-300 relative z-20"
                     >
-                        Upload More Files
+                        + Add More Files
                     </button>
                 )}
             </div>

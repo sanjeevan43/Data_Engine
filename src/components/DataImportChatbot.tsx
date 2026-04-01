@@ -44,7 +44,7 @@ export const DataImportChatbot: React.FC<ChatbotProps> = ({
         {
             id: '1',
             role: 'assistant',
-            content: "👋 **Welcome to DataFlow AI Assistant!**\n\nI'm a **FREE local AI** that runs in your browser!\n\n✨ **No API keys needed**\n🔒 **Completely private** - your data never leaves your computer\n⚡ **Works offline** after first load\n🆓 **100% free forever**\n\n**I can help you with:**\n🔍 Analyze CSV structure\n🔑 Suggest primary keys\n📊 Recommend data types\n🗺️ Help with field mapping\n\n**First time?** I'll download AI models (takes ~30 seconds). After that, I'm instant!\n\nUpload a CSV and ask me anything!",
+            content: "👋 **Welcome to OmniFlow AI Assistant!**\n\nI'm a **FREE local AI** that runs in your browser!\n\n✨ **No API keys needed**\n🔒 **Completely private** - your data never leaves your computer\n⚡ **Works offline** after first load\n🆓 **100% free forever**\n\n**I can help you with:**\n🔍 Analyze CSV structure\n🔑 Suggest primary keys\n📊 Recommend data types\n🗺️ Help with field mapping\n\n**First time?** I'll download AI models (takes ~30 seconds). After that, I'm instant!\n\nUpload a CSV and ask me anything!",
             timestamp: new Date()
         }
     ]);
@@ -175,7 +175,7 @@ export const DataImportChatbot: React.FC<ChatbotProps> = ({
                                 <Sparkles className="w-6 h-6" />
                             </div>
                             <div>
-                                <h3 className="font-bold text-lg">DataFlow AI</h3>
+                                <h3 className="font-bold text-lg">OmniFlow AI</h3>
                                 <p className="text-xs text-green-100 flex items-center gap-1">
                                     {isInitializing ? (
                                         <>

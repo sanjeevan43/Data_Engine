@@ -49,20 +49,22 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ onClose, initialPr
     ];
 
     return (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-900/50 backdrop-blur-xl animate-in fade-in duration-200">
-            <div className="w-full max-w-2xl bg-white rounded-[2.5rem] shadow-2xl overflow-hidden animate-in zoom-in-95 duration-200 max-h-[90vh] flex flex-col">
-                <div className="bg-slate-900 p-8 flex justify-between items-center shrink-0">
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/80 backdrop-blur-2xl animate-in fade-in duration-200">
+            <div className="w-full max-w-2xl bg-zinc-950 backdrop-blur-3xl rounded-[2rem] shadow-[0_0_50px_rgba(0,0,0,0.8)] border border-white/10 overflow-hidden animate-in zoom-in-95 duration-200 max-h-[90vh] flex flex-col relative">
+                {/* Glowing Top line */}
+                <div className="absolute top-0 left-0 w-full h-[1px] bg-gradient-to-r from-transparent via-cyan-500/50 to-transparent" />
+                <div className="bg-black p-8 flex justify-between items-center shrink-0 border-b border-white/5 relative z-10">
                     <div className="flex items-center gap-4">
-                        <div className="bg-blue-600 p-3 rounded-2xl">
-                            <Settings className="text-white" />
+                        <div className="bg-cyan-500/10 p-3 rounded-xl border border-cyan-500/20 shadow-md">
+                            <Settings className="text-cyan-400" />
                         </div>
                         <div>
-                            <h2 className="text-2xl font-black text-white">Pipeline Configuration</h2>
-                            <p className="text-slate-400 text-sm">Target database & routing options</p>
+                            <h2 className="text-2xl font-bold text-white tracking-tight">Pipeline Configuration</h2>
+                            <p className="text-zinc-500 font-medium text-sm">Configure your destination database</p>
                         </div>
                     </div>
-                    <button onClick={onClose} className="text-slate-400 hover:text-white transition-colors">
-                        <X />
+                    <button type="button" onClick={onClose} className="p-3 bg-white/5 hover:bg-white/10 rounded-full transition-colors border border-white/10">
+                        <X size={24} className="text-zinc-400 hover:text-white" />
                     </button>
                 </div>
 
@@ -79,9 +81,9 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ onClose, initialPr
                                     key={p}
                                     type="button"
                                     onClick={() => setTempConfig({ ...tempConfig, provider: p })}
-                                    className={`px-4 py-3 rounded-xl border-2 font-bold text-sm transition-all ${tempConfig.provider === p
-                                        ? 'border-blue-500 bg-blue-50 text-blue-700 shadow-md'
-                                        : 'border-slate-100 bg-white text-slate-500 hover:border-slate-200'
+                                    className={`px-4 py-3 rounded-xl border font-bold text-sm transition-all duration-300 ${tempConfig.provider === p
+                                        ? 'border-cyan-500/50 bg-cyan-500/10 text-cyan-400 shadow-[0_0_20px_rgba(6,182,212,0.2)]'
+                                        : 'border-white/5 bg-zinc-900/50 text-zinc-400 hover:border-white/20 hover:bg-zinc-800 hover:text-zinc-200'
                                         }`}
                                 >
                                     {p}
@@ -105,7 +107,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ onClose, initialPr
                                         type={f.type}
                                         value={(tempConfig as any)[f.id] || ''}
                                         onChange={(e) => setTempConfig({ ...tempConfig, [f.id]: e.target.value })}
-                                        className="w-full px-5 py-3.5 bg-slate-50 border-2 border-transparent focus:border-blue-500 rounded-xl font-bold text-slate-900 outline-none transition-all placeholder:text-slate-300"
+                                        className="input-premium"
                                         placeholder={`Enter ${f.label}...`}
                                     />
                                 </div>
@@ -124,7 +126,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ onClose, initialPr
                                     type="url"
                                     value={tempConfig.supabaseUrl || ''}
                                     onChange={(e) => setTempConfig({ ...tempConfig, supabaseUrl: e.target.value })}
-                                    className="w-full px-5 py-3.5 bg-slate-50 border-2 border-transparent focus:border-blue-500 rounded-xl font-bold text-slate-900 outline-none transition-all placeholder:text-slate-300"
+                                    className="input-premium"
                                     placeholder="https://xxx.supabase.co"
                                 />
                             </div>
@@ -137,7 +139,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ onClose, initialPr
                                     type="password"
                                     value={tempConfig.supabaseAnonKey || ''}
                                     onChange={(e) => setTempConfig({ ...tempConfig, supabaseAnonKey: e.target.value })}
-                                    className="w-full px-5 py-3.5 bg-slate-50 border-2 border-transparent focus:border-blue-500 rounded-xl font-bold text-slate-900 outline-none transition-all placeholder:text-slate-300"
+                                    className="input-premium"
                                     placeholder="Enter Anon Key..."
                                 />
                             </div>
@@ -210,8 +212,8 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ onClose, initialPr
                                     placeholder="User"
                                 />
                             </div>
-                            <div className="md:col-span-2 bg-blue-50 border border-blue-200 rounded-xl p-4">
-                                <p className="text-sm text-blue-900 font-medium">
+                            <div className="md:col-span-2 bg-black border border-cyan-500/20 rounded-xl p-4">
+                                <p className="text-sm text-cyan-500 font-medium">
                                     💡 <strong>Tip:</strong> Make sure your GraphQL API has the appropriate schema and mutation/query operations for the model name specified above.
                                 </p>
                             </div>
@@ -369,7 +371,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ onClose, initialPr
                                     type="text"
                                     value={tempConfig.collectionName || ''}
                                     onChange={(e) => setTempConfig({ ...tempConfig, collectionName: e.target.value })}
-                                    className="w-full px-5 py-3.5 bg-slate-50 border-2 border-transparent focus:border-blue-500 rounded-xl font-bold text-slate-900 outline-none transition-all placeholder:text-slate-300"
+                                    className="input-premium"
                                     placeholder="users"
                                 />
                             </div>
@@ -382,12 +384,12 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ onClose, initialPr
                     )}
 
                     {!['Firebase', 'Supabase', 'AWS Amplify', 'Appwrite', 'MongoDB', 'PocketBase'].includes(tempConfig.provider) && (
-                        <div className="text-center py-12 bg-slate-50 rounded-3xl border border-dashed border-slate-200">
-                            <div className="inline-block p-4 bg-white rounded-full shadow-sm mb-4">
-                                <Database className="w-8 h-8 text-slate-300" />
+                        <div className="text-center py-12 bg-zinc-900/30 rounded-3xl border border-dashed border-white/10">
+                            <div className="inline-block p-4 bg-black rounded-xl shadow-sm mb-4 border border-white/5">
+                                <Database className="w-8 h-8 text-zinc-500" />
                             </div>
-                            <h3 className="text-xl font-bold text-slate-900">Config for {tempConfig.provider}</h3>
-                            <p className="text-slate-500 mt-2 max-w-sm mx-auto">
+                            <h3 className="text-xl font-bold text-white">Config for {tempConfig.provider}</h3>
+                            <p className="text-zinc-500 mt-2 max-w-sm mx-auto">
                                 All major database providers are now supported!
                                 Please select Firebase, Supabase, AWS Amplify, MongoDB, Appwrite, or PocketBase.
                             </p>
@@ -396,11 +398,11 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ onClose, initialPr
 
                 </form>
 
-                <div className="p-8 border-t bg-slate-50 flex gap-4 shrink-0">
-                    <button type="submit" onClick={handleSubmit} className="btn-primary flex-1 py-4 text-xl font-black shadow-xl">
+                <div className="p-8 border-t border-white/5 bg-black flex gap-4 shrink-0 flex-col sm:flex-row relative z-10">
+                    <button type="submit" onClick={handleSubmit} className="btn-primary flex-1">
                         Save {tempConfig.provider} Pipeline
                     </button>
-                    <button type="button" onClick={onClose} className="btn-secondary px-8 font-bold bg-white">
+                    <button type="button" onClick={onClose} className="btn-secondary w-full sm:w-auto">
                         Cancel
                     </button>
                 </div>
