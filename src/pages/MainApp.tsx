@@ -30,8 +30,9 @@ export default function MainApp() {
     const [pendingFiles, setPendingFiles] = useState<File[]>([]);
 
     const orchestrator = useMemo(() => new DataOrchestratorAgent({
-        apiKey: config.aiApiKey,
-        model: config.aiModel
+        provider: 'gemini',
+        apiKey: config.aiApiKey || '',
+        model: config.aiModel || 'gemini-pro'
     }), [config.aiApiKey, config.aiModel]);
 
     // Derived state – unique file count for stats
@@ -117,13 +118,13 @@ export default function MainApp() {
             {/* Enhanced Mapping modal – appears after orchestration is approved or skipped */}
             {!orchestrationResult && importer.processedFiles.length > 0 && (
                 <EnhancedMappingModal
-                    processedFiles={importer.processedFiles}
-                    onUpdateMapping={(fileIndex, mappingIndex, updates) => {
-                        if (importer.processedFiles.length > fileIndex) {
-                            const cur = importer.processedFiles[fileIndex].mapping;
-                            const newMap = cur.map((field, i) => (i === mappingIndex ? { ...field, ...updates } : field));
-                            importer.updateMapping(fileIndex, newMap);
-                        }
+                    fileName={importer.processedFiles[0].file.name}
+                    rowCount={importer.processedFiles[0].file.data.length}
+                    mapping={importer.processedFiles[0].mapping}
+                    onUpdateMapping={(index, updates) => {
+                        const cur = importer.processedFiles[0].mapping;
+                        const newMap = cur.map((field, i) => (i === index ? { ...field, ...updates } : field));
+                        importer.updateMapping(0, newMap);
                     }}
                     onCommit={handleCommit}
                     onCancel={importer.reset}
