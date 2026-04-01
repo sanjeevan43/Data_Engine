@@ -1,50 +1,26 @@
 /**
- * AI Service Layer - Main Exports
+ * AI Service Layer - Modern Exports
  * 
- * This module provides AI-assisted data entry capabilities
- * for the CSV import system.
- * 
- * @example
- * ```typescript
- * import { DataEntryAgent } from './services/ai';
- * 
- * const agent = DataEntryAgent.create();
- * const result = await agent.quickProcess(headers, rows, config);
- * 
- * // Use result.cleanedData with DataManager.importData()
- * await DataManager.importData(result.cleanedData, config);
- * ```
+ * This module provides high-performance AI services for 
+ * data orchestration, cleaning, and code analysis.
  */
 
-// Main Agent
-export { DataEntryAgent } from './agent/DataEntryAgent';
-export { AgentRunner } from './agent/AgentRunner';
+// Core Services
+export { GeminiService } from './GeminiService';
+export { LocalAIService } from './LocalAIService';
 
-// Tools
-export { AnalyzeCsvTool } from './tools/analyzeCsvTool';
-export { MapFieldsTool } from './tools/mapFieldsTool';
-export { ValidateDataTool } from './tools/validateDataTool';
-export { FixDataTool } from './tools/fixDataTool';
-export { SchemaTool } from './tools/schemaTool';
+// Agents
+export { DataOrchestratorAgent } from './agent/DataOrchestratorAgent';
+export { CodeCleanupAgent } from './agent/CodeCleanupAgent';
 
 // Types
 export type {
-    AIProcessInput,
-    AIProcessOutput,
-    AgentConfig,
-    CollectionSchema,
-    SchemaField,
-    DataError,
-    ProcessStats,
-    AnalysisResult,
-    MappingResult,
-    ValidationResult,
-    FixResult,
-    Transformation,
-    LLMConfig
-} from './types';
+    OrchestrationResult,
+    OrchestratedField
+} from './agent/DataOrchestratorAgent';
 
-// Prompts (for advanced users)
-export { SYSTEM_PROMPT, CRITICAL_RULES } from './prompts/system.prompt';
-export { getMappingPrompt } from './prompts/mapping.prompt';
-export { getValidationPrompt } from './prompts/validation.prompt';
+export type {
+    LLMConfig,
+    AIProcessInput,
+    AIProcessOutput
+} from './types';

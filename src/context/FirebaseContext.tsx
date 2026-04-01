@@ -109,6 +109,11 @@ export interface PipelineConfig {
     convexUrl?: string;
     convexDeploymentKey?: string;
     convexTableName?: string;
+
+    // AI Configuration
+    aiApiKey?: string;
+    aiModel?: string;
+    aiProvider?: 'gemini' | 'openai' | 'local';
 }
 
 export type FirebaseConfig = PipelineConfig; // Alias for backward compatibility
@@ -135,7 +140,10 @@ const defaultContext: FirebaseContextType = {
         messagingSenderId: '',
         appId: '',
         measurementId: '',
-        collectionName: 'csv_imports'
+        collectionName: 'csv_imports',
+        aiApiKey: '',
+        aiModel: 'gemini-pro',
+        aiProvider: 'gemini'
     },
     updateConfig: () => { },
     isConnected: false,

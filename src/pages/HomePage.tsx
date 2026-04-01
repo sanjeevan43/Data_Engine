@@ -1,6 +1,5 @@
-import { useNavigate } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { Database, Sparkles, ChevronRight, Zap, Target, Shield } from 'lucide-react';
-import { SupportedDatabases } from '../components/SupportedDatabases';
 
 export default function HomePage() {
     const navigate = useNavigate();
@@ -28,7 +27,7 @@ export default function HomePage() {
                 
                 <div className="hidden md:flex items-center gap-8 text-sm font-medium text-zinc-400">
                     <a href="#features" className="hover:text-white transition-colors">Features</a>
-                    <a href="#databases" className="hover:text-white transition-colors">Integrations</a>
+                    <Link to="/databases" className="hover:text-white transition-colors">Integrations</Link>
                     <a href="#security" className="hover:text-white transition-colors">Security</a>
                 </div>
 
@@ -60,19 +59,13 @@ export default function HomePage() {
                 </p>
 
                 {/* CTA Buttons */}
-                <div className="flex flex-col sm:flex-row items-center justify-center gap-4 mb-24">
+                <div className="flex flex-row items-center justify-center gap-4 mb-24">
                     <button
                         onClick={() => navigate('/signup')}
-                        className="group relative px-8 py-4 bg-white text-black rounded-xl font-bold text-lg hover:scale-[1.02] active:scale-95 transition-all w-full sm:w-auto flex items-center justify-center gap-3 shadow-[0_0_40px_rgba(255,255,255,0.2)]"
+                        className="group relative px-10 py-5 bg-white text-black rounded-2xl font-black text-xl hover:scale-[1.05] active:scale-95 transition-all w-full sm:w-auto flex items-center justify-center gap-4 shadow-[0_0_50px_rgba(255,255,255,0.3)]"
                     >
-                        Start Processing Free
-                        <ChevronRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
-                    </button>
-                    <button
-                        onClick={() => navigate('/cleanup')}
-                        className="group px-8 py-4 bg-transparent text-white border border-white/20 hover:border-white/40 hover:bg-white/5 rounded-xl font-bold text-lg hover:scale-[1.02] active:scale-95 transition-all w-full sm:w-auto flex items-center justify-center gap-3"
-                    >
-                        Code Cleanup Agent
+                        INITIALIZE ENGINE
+                        <ChevronRight className="w-6 h-6 group-hover:translate-x-1 transition-transform" />
                     </button>
                 </div>
 
@@ -101,11 +94,22 @@ export default function HomePage() {
                     </div>
                 </div>
 
-                {/* Databases Section */}
-                <div id="databases" className="mt-32 pt-16 border-t border-white/10">
-                    <SupportedDatabases onSelectDatabase={() => {}} />
-                </div>
+
             </main>
+
+            <footer className="bg-black py-16 border-t border-white/5 relative z-20">
+                <div className="max-w-7xl mx-auto px-10 flex flex-col items-center">
+                    <div className="flex items-center justify-center gap-3 mb-6">
+                        <Database className="w-6 h-6 text-cyan-400" />
+                        <span className="text-2xl font-bold text-white tracking-tight">Omni<span className="text-cyan-400">Flow</span></span>
+                    </div>
+                    <p className="text-zinc-500 font-medium tracking-wide text-sm flex items-center gap-4">
+                        Trust Infrastructure • 2026
+                        <span className="w-1 h-1 bg-zinc-800 rounded-full" />
+                        <Link to="/privacy" className="hover:text-cyan-400 transition-colors">Privacy Policy</Link>
+                    </p>
+                </div>
+            </footer>
         </div>
     );
 }

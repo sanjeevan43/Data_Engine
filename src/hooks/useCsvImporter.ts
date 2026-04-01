@@ -3,8 +3,6 @@ import { useState } from 'react';
 import Papa from 'papaparse';
 import { collection, writeBatch, doc } from 'firebase/firestore';
 import { useFirebase } from '../context/FirebaseContext';
-import { DataEntryAgent } from '../services/ai';
-import type { AIProcessOutput } from '../services/ai';
 
 export interface MappingField {
     csvHeader: string;
@@ -36,7 +34,7 @@ export interface DataDescription {
 
 export interface ProcessedFile {
     file: CSVFile;
-    aiResult: AIProcessOutput | null;
+    aiResult: any | null;
     mapping: MappingField[];
     dataDescription?: DataDescription;
 }
@@ -118,27 +116,7 @@ export const useCsvImporter = () => {
                     isEnabled: !!h,
                 }));
                 const csvFile: CSVFile = { name: fileToParse.name, data: csvRows, headers };
-                let aiResult: AIProcessOutput | null = null;
-                let finalMapping = initialMapping;
-                if (useAiAssist && config) {
-                    try {
-                        setAiProcessing(true);
-                        const agent = DataEntryAgent.create({ autoFix: true });
-                        const result = await agent.quickProcess(headers, csvRows as any[][], config);
-                        aiResult = result;
-                        finalMapping = headers.map(h => ({
-                            csvHeader: h,
-                            firestoreField: result.mapping[h] || h.replace(/[^a-zA-Z0-9]/g, '_').toLowerCase(),
-                            isEnabled: !!result.mapping[h],
-                        }));
-                    } catch (e: any) {
-                        console.error('AI processing failed', e);
-                        setError(`AI assist failed: ${e.message}`);
-                    } finally {
-                        setAiProcessing(false);
-                    }
-                }
-                setProcessedFiles(prev => [...prev, { file: csvFile, aiResult, mapping: finalMapping }]);
+                setProcessedFiles(prev => [...prev, { file: csvFile, aiResult: null, mapping: initialMapping }]);
             },
             error: err => setError(`CSV Parsing failed: ${err.message}`),
         });
@@ -210,28 +188,7 @@ export const useCsvImporter = () => {
                                 isUnique: false,
                             }));
                             const csvFile: CSVFile = { name: file.name, data: csvRows, headers };
-                            let aiResult: AIProcessOutput | null = null;
-                            let finalMapping = initialMapping;
-                            if (useAiAssist && config) {
-                                try {
-                                    const agent = DataEntryAgent.create({ autoFix: true });
-                                    const result = await agent.quickProcess(headers, csvRows as any[][], config);
-                                    aiResult = result;
-                                    finalMapping = headers.map(h => ({
-                                        csvHeader: h,
-                                        firestoreField: result.mapping[h] || h.replace(/[^a-zA-Z0-9]/g, '_').toLowerCase(),
-                                        isEnabled: !!result.mapping[h],
-                                        isPrimaryKey: false,
-                                        isForeignKey: false,
-                                        dataType: 'string' as const,
-                                        isRequired: false,
-                                        isUnique: false,
-                                    }));
-                                } catch (e) {
-                                    console.error('AI processing failed', e);
-                                }
-                            }
-                            newProcessed.push({ file: csvFile, aiResult, mapping: finalMapping });
+                            newProcessed.push({ file: csvFile, aiResult: null, mapping: initialMapping });
                             resolve();
                         } catch (e) {
                             reject(e as any);

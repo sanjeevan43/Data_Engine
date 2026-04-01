@@ -85,14 +85,14 @@ export class CodeCleanupAgent {
         const lines = file.content.split('\n');
 
         lines.forEach((line, index) => {
-            // Check for inconsistent variable naming
-            const varMatch = line.match(/(?:const|let|var)\s+([a-z_][a-zA-Z0-9_]*)/g);
-            if (varMatch) {
-                varMatch.forEach(match => {
-                    const varName = match.split(/\s+/)[1];
-                    
-                    // Check for snake_case in JavaScript/TypeScript (should be camelCase)
-                    if (varName.includes('_') && !varName.startsWith('_')) {
+            // 1. Variable definitions (const, let, var)
+            // Handles: const my_var, let [a_b, c_d], const { e_f, g_h }
+            const varPattern = /\b(?:const|let|var)\s*(?:\{|\[)?\s*([a-z_][a-zA-Z0-9_]*(?:\s*,\s*[a-z_][a-zA-Z0-9_]*)*)\s*(?:\}|\])?\s*=/g;
+            let match;
+            while ((match = varPattern.exec(line)) !== null) {
+                const names = match[1].split(',').map(s => s.trim());
+                names.forEach(varName => {
+                    if (varName && varName.includes('_') && !varName.startsWith('_') && !varName.toUpperCase().includes(varName)) {
                         issues.push({
                             file: file.path,
                             line: index + 1,
@@ -103,36 +103,48 @@ export class CodeCleanupAgent {
                             autoFixable: true
                         });
                     }
+                });
+            }
 
-                    // Check for unclear names
-                    if (varName.length <= 2 && !['i', 'j', 'k', 'id', 'db'].includes(varName)) {
+            // 2. Function parameters
+            const paramPattern = /function\s*\w*\s*\(([^)]+)\)|(?:\(([^)]+)\)|([a-z_][a-zA-Z0-9_]*))\s*=>/g;
+            let paramMatch;
+            while ((paramMatch = paramPattern.exec(line)) !== null) {
+                const paramsStr = paramMatch[1] || paramMatch[2] || paramMatch[3] || '';
+                const params = paramsStr.split(',').map(s => s.trim().split(':')[0].trim());
+                params.forEach(paramName => {
+                    if (paramName && paramName.includes('_') && !paramName.startsWith('_')) {
                         issues.push({
                             file: file.path,
                             line: index + 1,
                             type: 'naming',
-                            severity: 'low',
-                            issue: `Variable '${varName}' has unclear name`,
-                            suggestion: `Use a more descriptive name`,
-                            autoFixable: false
+                            severity: 'medium',
+                            issue: `Parameter '${paramName}' uses snake_case`,
+                            suggestion: `Rename to '${this.toCamelCase(paramName)}'`,
+                            autoFixable: true
                         });
                     }
                 });
             }
 
-            // Check component naming (should be PascalCase)
-            const componentMatch = line.match(/(?:function|const)\s+([a-z][a-zA-Z0-9]*)\s*(?:=|:|\()/);
-            if (componentMatch && file.path.includes('components')) {
-                const name = componentMatch[1];
-                if (name[0] === name[0].toLowerCase()) {
-                    issues.push({
-                        file: file.path,
-                        line: index + 1,
-                        type: 'naming',
-                        severity: 'high',
-                        issue: `Component '${name}' should start with uppercase`,
-                        suggestion: `Rename to '${name[0].toUpperCase() + name.slice(1)}'`,
-                        autoFixable: true
-                    });
+            // 3. Component naming (PascalCase check)
+            if (file.path.includes('components') || file.path.endsWith('.tsx')) {
+                const compPattern = /(?:function|const)\s+([a-z][a-zA-Z0-9]*)\s*(?:=|:|\()/g;
+                let compMatch;
+                while ((compMatch = compPattern.exec(line)) !== null) {
+                    const name = compMatch[1];
+                    // If it looks like a component (returns JSX or starts with Uppercase in context)
+                    if (name[0] === name[0].toLowerCase() && (line.includes('=>') || line.includes('{'))) {
+                         issues.push({
+                            file: file.path,
+                            line: index + 1,
+                            type: 'naming',
+                            severity: 'high',
+                            issue: `React Component '${name}' should start with uppercase (PascalCase)`,
+                            suggestion: `Rename to '${name[0].toUpperCase() + name.slice(1)}'`,
+                            autoFixable: true
+                        });
+                    }
                 }
             }
         });
@@ -567,60 +579,81 @@ Manual fixes needed: ${issues.filter(i => !i.autoFixable).length}
      * Apply automatic fixes
      */
     applyFixes(file: CodeFile, issues: CodeIssue[]): string {
-        let content = file.content;
-        const lines = content.split('\n');
+        const lines = file.content.split('\n');
 
-        // Sort issues by line number (descending) to avoid offset issues
-        const sortedIssues = issues
-            .filter(i => i.autoFixable && i.file === file.path)
-            .sort((a, b) => (b.line || 0) - (a.line || 0));
+        // Group auto-fixable issues by line to handle multiple fixes per line
+        const issuesByLine = new Map<number, CodeIssue[]>();
+        issues.filter(i => i.autoFixable && i.file === file.path && i.line !== undefined)
+              .forEach(i => {
+                  const lineIssues = issuesByLine.get(i.line!) || [];
+                  lineIssues.push(i);
+                  issuesByLine.set(i.line!, lineIssues);
+              });
 
-        sortedIssues.forEach(issue => {
-            if (!issue.line) return;
-
-            const lineIndex = issue.line - 1;
+        // Process lines
+        const lineIndices = Array.from(issuesByLine.keys()).sort((a, b) => b - a);
+        
+        lineIndices.forEach(lineNum => {
+            const lineIndex = lineNum - 1;
             let line = lines[lineIndex];
+            const lineIssues = issuesByLine.get(lineNum)!;
 
-            switch (issue.type) {
-                case 'naming':
-                    // Fix snake_case to camelCase
-                    if (issue.issue.includes('snake_case')) {
-                        const match = issue.issue.match(/'([^']+)'/);
-                        if (match) {
-                            const oldName = match[1];
-                            const newName = this.toCamelCase(oldName);
-                            line = line.replace(new RegExp(`\\b${oldName}\\b`, 'g'), newName);
+            lineIssues.forEach(issue => {
+                switch (issue.type) {
+                    case 'naming':
+                        if (issue.issue.includes('snake_case')) {
+                             const match = issue.issue.match(/'([^']+)'/);
+                             if (match) {
+                                 const oldName = match[1];
+                                 const newName = this.toCamelCase(oldName);
+                                 line = line.replace(new RegExp(`\\b${oldName}\\b`, 'g'), newName);
+                             }
+                        } else if (issue.issue.includes('PascalCase')) {
+                             const match = issue.issue.match(/'([^']+)'/);
+                             if (match) {
+                                 const oldName = match[1];
+                                 const newName = oldName[0].toUpperCase() + oldName.slice(1);
+                                 line = line.replace(new RegExp(`\\b${oldName}\\b`, 'g'), newName);
+                             }
                         }
-                    }
-                    break;
+                        break;
 
-                case 'spelling':
-                    // Fix spelling mistakes
-                    const spellingMatch = issue.issue.match(/'([^']+)'/);
-                    const suggestionMatch = issue.suggestion.match(/'([^']+)'/);
-                    if (spellingMatch && suggestionMatch) {
-                        const wrong = spellingMatch[1];
-                        const correct = suggestionMatch[1];
-                        line = line.replace(new RegExp(`\\b${wrong}\\b`, 'gi'), correct);
-                    }
-                    break;
+                    case 'spelling':
+                        const spellingMatch = issue.issue.match(/'([^']+)'/);
+                        const suggestionMatch = issue.suggestion.match(/'([^']+)'/);
+                        if (spellingMatch && suggestionMatch) {
+                            const wrong = spellingMatch[1];
+                            const correct = suggestionMatch[1];
+                            line = line.replace(new RegExp(`\\b${wrong}\\b`, 'gi'), correct);
+                        }
+                        break;
 
-                case 'code-quality':
-                    // Remove console.log
-                    if (issue.issue.includes('console.log')) {
-                        line = line.replace(/console\.log\([^)]*\);?/, '');
-                    }
-                    // Remove commented code
-                    if (issue.issue.includes('Commented out code')) {
-                        line = '';
-                    }
-                    break;
-            }
+                    case 'code-quality':
+                        if (issue.issue.includes('console.log')) {
+                            // Try to remove the whole line if it's just a console.log, otherwise just the statement
+                            if (line.trim().match(/^console\.log\([^)]*\);?$/)) {
+                                line = '';
+                            } else {
+                                line = line.replace(/console\.log\([^)]*\);?/, '');
+                            }
+                        } else if (issue.issue.includes('Commented out code')) {
+                            line = '';
+                        }
+                        break;
+                }
+            });
 
             lines[lineIndex] = line;
         });
 
-        return lines.join('\n');
+        // Filter out completely emptied lines if they were code lines
+        return lines.filter((l, i) => {
+            // Keep empty lines if they were already empty or just whitespace
+            if (l.trim() === '' && file.content.split('\n')[i].trim() !== '') {
+                return false; 
+            }
+            return true;
+        }).join('\n');
     }
 
     /**

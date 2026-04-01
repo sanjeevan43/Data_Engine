@@ -271,6 +271,115 @@ Return as JSON:
         this.config.apiKey = apiKey;
         this.initialize();
     }
+
+    /**
+     * Neural Orchestration for Data Import
+     * Analyzes multiple files/samples to suggest a unified, professional schema
+     */
+    async orchestrateDataImport(
+        files: Array<{ name: string; headers: string[]; sample: any[][] }>
+    ): Promise<Array<{
+        originalName: string;
+        suggestedTableName: string;
+        fields: Array<{
+            originalHeader: string;
+            suggestedName: string;
+            dataType: string;
+            reason: string;
+            isPrimaryKey: boolean;
+        }>;
+        confidence: number;
+    }>> {
+        if (!this.isAvailable()) return [];
+
+        const prompt = `You are a Senior Data Architect. Analyze these files and propose a professional database schema.
+        
+        Files to Analyze:
+        ${files.map(f => `
+        - File: ${f.name}
+          Headers: ${f.headers.join(', ')}
+          Sample Data: ${JSON.stringify(f.sample)}
+        `).join('\n')}
+        
+        For each file, suggest:
+        1. A professional, descriptive table name (e.g., "users.csv" -> "SystemUserRegistry").
+        2. Clean, camelCase field names for each header.
+        3. Correct data types (string, number, date, boolean, email, url).
+        4. Identify the best Primary Key.
+        
+        Return as a JSON array:
+        [{
+          "originalName": "...",
+          "suggestedTableName": "...",
+          "confidence": 0.95,
+          "fields": [{
+            "originalHeader": "...",
+            "suggestedName": "...",
+            "dataType": "...",
+            "reason": "...",
+            "isPrimaryKey": boolean
+          }]
+        }]`;
+
+        try {
+            const result = await this.model!.generateContent(prompt);
+            const response = await result.response;
+            const text = response.text();
+
+            const jsonMatch = text.match(/\[[\s\S]*\]/);
+            if (jsonMatch) {
+                return JSON.parse(jsonMatch[0]);
+            }
+            return [];
+        } catch (error) {
+            console.error('Neural Orchestration failed:', error);
+            return [];
+        }
+    }
+
+    /**
+     * Propose cleaning transformations for a dataset
+     */
+    async proposeDataCleaning(
+        headers: string[],
+        sampleRows: any[][]
+    ): Promise<{
+        rules: Array<{
+            header: string;
+            action: 'standardize-date' | 'normalize-case' | 'trim-whitespace' | 'fill-missing';
+            description: string;
+        }>;
+    }> {
+        if (!this.isAvailable()) return { rules: [] };
+
+        const prompt = `Analyze this data for cleaning requirements:
+        Headers: ${headers.join(', ')}
+        Sample Data: ${JSON.stringify(sampleRows)}
+        
+        Propose cleaning rules to ensure high data quality. 
+        Focus on:
+        - Timestamps that need standardizing
+        - Names/Strings that need casing correction
+        - Fields with inconsistent whitespace
+        - Handling potential NULLs
+        
+        Return as JSON: { "rules": [{ "header": "...", "action": "...", "description": "..." }] }`;
+
+        try {
+            const result = await this.model!.generateContent(prompt);
+            const response = await result.response;
+            const text = response.text();
+
+            const jsonMatch = text.match(/\{[\s\S]*\}/);
+            if (jsonMatch) {
+                return JSON.parse(jsonMatch[0]);
+            }
+            return { rules: [] };
+        } catch (error) {
+            console.error('Cleaning proposal failed:', error);
+            return { rules: [] };
+        }
+    }
 }
 
 // Singleton instance

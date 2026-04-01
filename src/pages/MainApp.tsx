@@ -3,16 +3,15 @@ import { Database, CheckCircle2, AlertCircle } from 'lucide-react';
 import { FileUpload } from '../components/FileUpload';
 import { Header } from '../components/Header';
 import { SettingsModal } from '../components/SettingsModal';
-import { MappingModal } from '../components/MappingModal';
+import { EnhancedMappingModal } from '../components/EnhancedMappingModal';
+import { DataOrchestratorPanel } from '../components/DataOrchestratorPanel';
 import { Stats } from '../components/Stats';
 import { DataGrid } from '../components/DataGrid';
-import { SupportedDatabases } from '../components/SupportedDatabases';
-import { DataImportChatbot } from '../components/DataImportChatbot';
 import { PrivacyNotice } from '../components/PrivacyNotice';
 import { useFirebase } from '../context/FirebaseContext';
 import { useCsvImporter } from '../hooks/useCsvImporter';
 import { useCollectionData } from '../hooks/useCollectionData';
-import type { DatabaseProvider } from '../context/FirebaseContext';
+import { DataOrchestratorAgent, type OrchestrationResult } from '../services/ai/agent/DataOrchestratorAgent';
 
 /**
  * Main application page – displayed after the user clicks "Get Started" on the landing page.
@@ -24,8 +23,16 @@ export default function MainApp() {
     const importer = useCsvImporter();
 
     const [showSettings, setShowSettings] = useState(false);
-    const [selectedProvider, setSelectedProvider] = useState<DatabaseProvider | undefined>(undefined);
     const [showSuccessToast, setShowSuccessToast] = useState(false);
+    
+    // Orchestration State
+    const [orchestrationResult, setOrchestrationResult] = useState<OrchestrationResult | null>(null);
+    const [pendingFiles, setPendingFiles] = useState<File[]>([]);
+
+    const orchestrator = useMemo(() => new DataOrchestratorAgent({
+        apiKey: config.aiApiKey,
+        model: config.aiModel
+    }), [config.aiApiKey, config.aiModel]);
 
     // Derived state – unique file count for stats
     const uniqueFilesCount = useMemo(
@@ -35,7 +42,47 @@ export default function MainApp() {
 
     // Handlers ----------------------------------------------------------
     const handleFileSelect = async (files: File[]) => {
-        await importer.parseMultipleFiles(files);
+        if (files.length === 0) return;
+        
+        setPendingFiles(files);
+        
+        // Use the first file for orchestration demo (batch orchestration can be added later)
+        const file = files[0];
+        const reader = new FileReader();
+        
+        reader.onload = async (e) => {
+            const text = e.target?.result as string;
+            const lines = text.split('\n').filter(l => l.trim());
+            const headers = lines[0].split(',').map(h => h.trim());
+            const rows = lines.slice(1).map(l => l.split(',').map(v => v.trim()));
+            
+            const result = await orchestrator.orchestrate(file.name, headers, rows);
+            setOrchestrationResult(result);
+        };
+        
+        reader.readAsText(file);
+    };
+
+    const handleApproveOrchestration = async (result: OrchestrationResult) => {
+        // 1. Prepare the processed files for the importer
+        await importer.parseMultipleFiles(pendingFiles);
+        
+        // 2. Apply the orchestration suggestions to the importer's first file mapping
+        if (importer.processedFiles.length > 0) {
+            const neuralMapping = result.fields.map(f => ({
+                csvHeader: f.originalHeader,
+                firestoreField: f.suggestedName,
+                isEnabled: true,
+                isPrimaryKey: f.isPrimaryKey,
+                dataType: f.dataType,
+                isRequired: f.isPrimaryKey,
+                isUnique: f.isPrimaryKey
+            }));
+            
+            importer.updateMapping(0, neuralMapping);
+        }
+        
+        setOrchestrationResult(null);
     };
 
     const handleCommit = async () => {
@@ -54,11 +101,23 @@ export default function MainApp() {
             {/* Ambient Glow */}
             <div className="absolute top-20 left-1/2 -translate-x-1/2 w-[800px] h-[400px] bg-cyan-500/10 blur-[120px] rounded-full pointer-events-none" />
 
-            {/* Mapping modal – appears after files are parsed */}
-            {importer.processedFiles.length > 0 && (
-                <MappingModal
-                    processedFiles={importer.processedFiles}
+            {/* Neural Orchestrator Panel – shown before mapping */}
+            {orchestrationResult && (
+                <DataOrchestratorPanel 
+                    fileName={pendingFiles[0]?.name || 'dataset.csv'}
+                    result={orchestrationResult}
+                    onApprove={handleApproveOrchestration}
+                    onCancel={() => {
+                        setOrchestrationResult(null);
+                        setPendingFiles([]);
+                    }}
+                />
+            )}
 
+            {/* Enhanced Mapping modal – appears after orchestration is approved or skipped */}
+            {!orchestrationResult && importer.processedFiles.length > 0 && (
+                <EnhancedMappingModal
+                    processedFiles={importer.processedFiles}
                     onUpdateMapping={(fileIndex, mappingIndex, updates) => {
                         if (importer.processedFiles.length > fileIndex) {
                             const cur = importer.processedFiles[fileIndex].mapping;
@@ -73,9 +132,8 @@ export default function MainApp() {
                 />
             )}
 
-            {/* Settings modal */}
             {showSettings && (
-                <SettingsModal onClose={() => setShowSettings(false)} initialProvider={selectedProvider} />
+                <SettingsModal onClose={() => setShowSettings(false)} />
             )}
 
             {/* Success toast */}
@@ -163,65 +221,10 @@ export default function MainApp() {
                         <DataGrid data={data} onPurge={purge} isPurging={isPurging} collectionName={config.collectionName} />
                     </div>
                 )}
-
-                {/* AI Chatbot – always rendered (hidden when closed internally) */}
-                <DataImportChatbot
-                    csvHeaders={importer.processedFiles.length > 0 && importer.processedFiles[0].file.data[0] ? Object.keys(importer.processedFiles[0].file.data[0]) : []}
-                    currentMapping={importer.processedFiles[0]?.mapping || []}
-                    onSuggestion={suggestion => {
-                        // Apply chatbot suggestions to the mapping
-                        if (importer.processedFiles.length === 0) return;
-
-                        const currentMapping = importer.processedFiles[0].mapping;
-                        const fieldIndex = currentMapping.findIndex(f => f.csvHeader === suggestion.field);
-
-                        if (fieldIndex === -1) return;
-
-                        const updatedMapping = [...currentMapping];
-
-                        switch (suggestion.type) {
-                            case 'primary-key':
-                                // Set this field as primary key, unset others
-                                updatedMapping.forEach((field, idx) => {
-                                    field.isPrimaryKey = idx === fieldIndex;
-                                });
-                                break;
-
-                            case 'data-type':
-                                // Set the data type for this field
-                                updatedMapping[fieldIndex].dataType = suggestion.value;
-                                break;
-
-                            case 'foreign-key':
-                                // Set foreign key configuration
-                                updatedMapping[fieldIndex].isForeignKey = true;
-                                updatedMapping[fieldIndex].foreignKeyTable = suggestion.value.table;
-                                updatedMapping[fieldIndex].foreignKeyField = suggestion.value.field;
-                                break;
-
-                            case 'mapping':
-                                // Update field mapping
-                                updatedMapping[fieldIndex].firestoreField = suggestion.value;
-                                break;
-                        }
-
-                        // Apply the updated mapping
-                        importer.updateMapping(0, updatedMapping);
-                        console.log(`✅ Applied suggestion: ${suggestion.type} for ${suggestion.field}`, suggestion);
-                    }}
-                />
             </main>
 
             {/* Privacy Notice */}
             <PrivacyNotice />
-
-            {/* Supported databases footer */}
-            <SupportedDatabases
-                onSelectDatabase={provider => {
-                    setSelectedProvider(provider);
-                    setShowSettings(true);
-                }}
-            />
 
             {/* Page footer */}
             <footer className="bg-black py-16 border-t border-white/5 mt-32 relative z-20">
@@ -230,8 +233,10 @@ export default function MainApp() {
                         <Database className="w-6 h-6 text-cyan-400" />
                         <span className="text-2xl font-bold text-white tracking-tight">Omni<span className="text-cyan-400">Flow</span></span>
                     </div>
-                    <p className="text-zinc-500 font-medium tracking-wide text-sm">
+                    <p className="text-zinc-500 font-medium tracking-wide text-sm flex items-center gap-4">
                         Enterprise Data Infrastructure • 2026
+                        <span className="w-1 h-1 bg-zinc-800 rounded-full" />
+                        <a href="/privacy" className="hover:text-cyan-400 transition-colors">Privacy Policy</a>
                     </p>
                 </div>
             </footer>

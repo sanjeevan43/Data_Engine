@@ -1,5 +1,6 @@
 import React, { useState, useMemo } from 'react';
-import { Database, Server, HardDrive, Cpu, Cloud, Folder } from 'lucide-react';
+import { Database, Server, HardDrive, Cpu, Cloud, Folder, Sparkles, Zap, ArrowRight, ShieldCheck } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 import type { DatabaseProvider } from '../context/FirebaseContext';
 
 // Data Definition
@@ -108,6 +109,7 @@ interface SupportedDatabasesProps {
 }
 
 export const SupportedDatabases: React.FC<SupportedDatabasesProps> = ({ onSelectDatabase }) => {
+    const navigate = useNavigate();
     const [filter, setFilter] = useState<'All' | 'SQL' | 'NoSQL' | 'SQLite'>('All');
 
     const filteredDatabases = useMemo(() => {
@@ -122,14 +124,7 @@ export const SupportedDatabases: React.FC<SupportedDatabasesProps> = ({ onSelect
         }
     };
 
-    const getBadgeColor = (type: string) => {
-        switch (type) {
-            case 'SQL': return 'bg-indigo-500/20 text-indigo-300 border-indigo-500/30';
-            case 'NoSQL': return 'bg-emerald-500/20 text-emerald-300 border-emerald-500/30';
-            case 'SQLite': return 'bg-amber-500/20 text-amber-300 border-amber-500/30';
-            default: return 'bg-slate-800 text-slate-300 border-white/10';
-        }
-    };
+
 
     return (
         <section className="py-24 bg-slate-900/50 backdrop-blur-xl relative overflow-hidden border-t border-white/5">
@@ -168,9 +163,8 @@ export const SupportedDatabases: React.FC<SupportedDatabasesProps> = ({ onSelect
                     ))}
                 </div>
 
-                {/* Grid */}
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-                    {filteredDatabases.map((db) => (
+                    {filteredDatabases.map((db: DatabaseOption) => (
                         <div
                             key={db.name}
                             onClick={() => onSelectDatabase && onSelectDatabase(db.name)}
@@ -184,9 +178,6 @@ export const SupportedDatabases: React.FC<SupportedDatabasesProps> = ({ onSelect
                                     <div className="w-14 h-14 bg-slate-800/80 rounded-2xl flex items-center justify-center text-indigo-400 group-hover:bg-indigo-500/20 group-hover:text-indigo-300 group-hover:scale-110 transition-all duration-300 border border-white/5 group-hover:border-indigo-500/30">
                                         {db.icon}
                                     </div>
-                                    <span className={`px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-wider border ${getBadgeColor(db.type)}`}>
-                                        {db.type}
-                                    </span>
                                 </div>
 
                                 <h3 className="text-2xl font-bold text-white mb-3 group-hover:text-indigo-300 transition-colors">
@@ -199,6 +190,47 @@ export const SupportedDatabases: React.FC<SupportedDatabasesProps> = ({ onSelect
                             </div>
                         </div>
                     ))}
+                </div>
+
+                {/* Advanced Diagnostics Section */}
+                <div className="mt-32 relative group">
+                    <div className="absolute -inset-1 bg-gradient-to-r from-cyan-500 via-blue-600 to-purple-600 rounded-[3rem] blur-xl opacity-20 group-hover:opacity-40 transition-opacity animate-pulse" />
+                    
+                    <div className="relative bg-zinc-950/80 border border-white/10 p-12 md:p-16 rounded-[2.5rem] backdrop-blur-2xl overflow-hidden flex flex-col md:flex-row items-center gap-12">
+                        {/* Decorative background grid */}
+                        <div className="absolute inset-0 bg-[linear-gradient(to_right,#ffffff05_1px,transparent_1px),linear-gradient(to_bottom,#ffffff05_1px,transparent_1px)] bg-[size:20px_20px] pointer-events-none" />
+                        
+                        <div className="relative z-10 flex-shrink-0">
+                            <div className="relative">
+                                <div className="absolute inset-0 bg-cyan-400/20 blur-3xl animate-pulse" />
+                                <div className="w-24 h-24 bg-black border border-white/10 rounded-3xl flex items-center justify-center shadow-2xl group-hover:scale-105 transition-transform">
+                                     <Sparkles className="w-12 h-12 text-cyan-400" />
+                                </div>
+                            </div>
+                        </div>
+
+                        <div className="relative z-10 flex-1 text-center md:text-left">
+                            <div className="inline-flex items-center gap-2 text-cyan-400 font-black uppercase tracking-widest text-[10px] mb-4 bg-cyan-400/5 border border-cyan-400/20 px-3 py-1 rounded-full">
+                                <ShieldCheck className="w-3 h-3" />
+                                Advanced Neural Diagnostics
+                            </div>
+                            <h3 className="text-4xl font-black text-white mb-4 tracking-tighter leading-none">NEURAL CLEANUP <span className="text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-blue-500">AGENT</span>.</h3>
+                            <p className="text-zinc-400 text-lg font-medium max-w-xl leading-relaxed">
+                                Deploy our proprietary AI engine to scan your custom codebase for syntax anomalies, naming inconsistencies, and architectural tech debt.
+                            </p>
+                        </div>
+
+                        <div className="relative z-10 flex-shrink-0">
+                            <button
+                                onClick={() => navigate('/cleanup')}
+                                className="group/btn relative px-8 py-4 bg-white text-black font-black uppercase text-xs tracking-[0.2em] rounded-2xl flex items-center gap-3 hover:scale-105 active:scale-95 transition-all"
+                            >
+                                <Zap className="w-4 h-4 fill-current group-hover/btn:text-cyan-500 transition-colors" />
+                                Initialize Protocol
+                                <ArrowRight className="w-4 h-4 group-hover/btn:translate-x-1 transition-transform" />
+                            </button>
+                        </div>
+                    </div>
                 </div>
             </div>
         </section>

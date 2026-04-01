@@ -444,4 +444,51 @@ export class LocalAIService {
 
         return 'string';
     }
+
+    /**
+     * Normalize data value based on type
+     */
+    static normalizeValue(value: any, type: string): any {
+        if (value === null || value === undefined || value === '') return null;
+
+        const strValue = String(value).trim();
+
+        switch (type) {
+            case 'number':
+                const num = Number(strValue.replace(/[,$]/g, ''));
+                return isNaN(num) ? value : num;
+            
+            case 'boolean':
+                const lower = strValue.toLowerCase();
+                if (['true', 'yes', '1', 'on'].includes(lower)) return true;
+                if (['false', 'no', '0', 'off'].includes(lower)) return false;
+                return value;
+
+            case 'date':
+                return this.standardizeDate(strValue);
+
+            case 'string':
+                // Small strings that look like names/titles: Title Case
+                if (strValue.length > 0 && strValue.length < 50 && !strValue.includes(' ')) {
+                    return strValue.charAt(0).toUpperCase() + strValue.slice(1).toLowerCase();
+                }
+                return strValue;
+
+            default:
+                return strValue;
+        }
+    }
+
+    /**
+     * Standardize date strings to ISO format
+     */
+    private static standardizeDate(dateStr: string): string {
+        try {
+            const date = new Date(dateStr);
+            if (!isNaN(date.getTime())) {
+                return date.toISOString().split('T')[0];
+            }
+        } catch (e) {}
+        return dateStr;
+    }
 }
