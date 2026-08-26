@@ -1,8 +1,8 @@
 // src/hooks/useCsvImporter.ts
 import { useState } from 'react';
 import Papa from 'papaparse';
-import { collection, writeBatch, doc } from 'firebase/firestore';
 import { useFirebase } from '../context/FirebaseContext';
+import { DataManager } from '../services/db/DataManager';
 
 export interface MappingField {
     csvHeader: string;
@@ -44,7 +44,7 @@ export interface ProcessedFile {
  * Includes a deduplication helper to remove duplicate rows before import.
  */
 export const useCsvImporter = () => {
-    const { db, config } = useFirebase();
+    const { config } = useFirebase();
     const [processedFiles, setProcessedFiles] = useState<ProcessedFile[]>([]);
     const [isImporting, setIsImporting] = useState(false);
     const [progress, setProgress] = useState(0);
@@ -247,11 +247,10 @@ export const useCsvImporter = () => {
     // Commit to Firestore
     // ---------------------------------------------------------------------
     const commit = async () => {
-        if (!db) {
-            setError('Firebase is not connected.');
+        if (!config) {
+            setError('Pipeline Configuration is missing.');
             return;
         }
-        if (!config?.collectionName) return;
         setIsImporting(true);
         setProgress(0);
         setError(null);
@@ -275,30 +274,30 @@ export const useCsvImporter = () => {
                     });
                     dataToImport = deduplicateRows(dataToImport);
                 }
-                const batchSize = 450;
-                let processed = 0;
-                const total = dataToImport.length;
-                while (processed < total) {
-                    const batch = writeBatch(db);
-                    const chunk = dataToImport.slice(processed, processed + batchSize);
-                    chunk.forEach(entry => {
-                        const docRef = doc(collection(db, config.collectionName));
-                        const dataWithMeta = {
-                            ...entry,
-                            _fileName: csvFile.name,
-                            _uploadedAt: new Date().toISOString(),
-                            ...(processedFiles[fileIdx].dataDescription && {
-                                _dataDescription: { ...processedFiles[fileIdx].dataDescription },
-                            }),
-                        };
-                        batch.set(docRef, dataWithMeta);
-                    });
-                    await batch.commit();
-                    processed += chunk.length;
-                    totalImported += chunk.length;
-                    const overallProgress = ((fileIdx * 100) + Math.round((processed / total) * 100)) / processedFiles.length;
-                    setProgress(Math.round(overallProgress));
+
+                // Add metadata
+                const enrichedData = dataToImport.map(entry => ({
+                    ...entry,
+                    _fileName: csvFile.name,
+                    _uploadedAt: new Date().toISOString(),
+                    ...(processedFiles[fileIdx].dataDescription && {
+                        _dataDescription: { ...processedFiles[fileIdx].dataDescription },
+                    }),
+                }));
+
+                const result = await DataManager.importData(
+                    enrichedData,
+                    config,
+                    (count, total) => {
+                        const overallProgress = ((fileIdx * 100) + Math.round((count / total) * 100)) / processedFiles.length;
+                        setProgress(Math.round(overallProgress));
+                    }
+                );
+
+                if (result.errors && result.errors.length > 0) {
+                    throw new Error(result.errors[0].error);
                 }
+                totalImported += result.success;
             }
             setSuccessCount(totalImported);
             setProcessedFiles([]);

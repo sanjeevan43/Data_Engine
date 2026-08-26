@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
-import { collection, query, limit, onSnapshot, writeBatch, getDocs } from 'firebase/firestore';
+import { collection, query, limit, onSnapshot } from 'firebase/firestore';
 import { useFirebase } from '../context/FirebaseContext';
+import { DataManager } from '../services/db/DataManager';
 
 export interface CsvRow {
     id: string;
@@ -17,56 +18,79 @@ export const useCollectionData = () => {
 
     useEffect(() => {
         // Only attempt to read if we have a valid, checked connection
-        if (!db || !config.collectionName || !isConnected) {
+        if (!config || !isConnected) {
             setData([]); // Clear data if we disconnect
             return;
         }
 
-        let unsubscribe: () => void;
+        if (config.provider === 'Firebase' && db) {
+            let unsubscribe: () => void;
 
-        try {
-            const q = query(collection(db, config.collectionName), limit(1000));
-            unsubscribe = onSnapshot(
-                q,
-                (snapshot) => {
-                    const docs = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })) as CsvRow[];
-                    setData(docs);
-                    setError(null);
-                },
-                (err) => {
-                    console.error("Firestore Error:", err);
-                    if (err.code === 'permission-denied') {
-                        setError(`Access denied to collection "${config.collectionName}". Please check your Firestore Security Rules.`);
-                    } else {
-                        setError(`Error: ${err.message}`);
+            try {
+                const q = query(collection(db, config.collectionName), limit(1000));
+                unsubscribe = onSnapshot(
+                    q,
+                    (snapshot) => {
+                        const docs = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })) as CsvRow[];
+                        setData(docs);
+                        setError(null);
+                    },
+                    (err) => {
+                        console.error("Firestore Error:", err);
+                        if (err.code === 'permission-denied') {
+                            setError(`Access denied to collection "${config.collectionName}". Please check your Firestore Security Rules.`);
+                        } else {
+                            setError(`Error: ${err.message}`);
+                        }
+                    }
+                );
+            } catch (err: any) {
+                setError(err.message);
+            }
+
+            return () => {
+                if (unsubscribe) unsubscribe();
+            };
+        } else {
+            // For other providers, use a periodic polling interval to fetch data
+            let isMounted = true;
+
+            const fetchNonFirebaseData = async () => {
+                try {
+                    const fetched = await DataManager.fetchData(config);
+                    if (isMounted) {
+                        setData(fetched as CsvRow[]);
+                        setError(null);
+                    }
+                } catch (err: any) {
+                    if (isMounted) {
+                        console.error("Fetch Error:", err);
+                        setError(`Failed to fetch data: ${err.message}`);
                     }
                 }
-            );
-        } catch (err: any) {
-            setError(err.message);
-        }
+            };
 
-        return () => {
-            if (unsubscribe) unsubscribe();
-        };
-    }, [db, config.collectionName, isConnected]);
+            fetchNonFirebaseData();
+            const interval = setInterval(fetchNonFirebaseData, 5000);
+
+            return () => {
+                isMounted = false;
+                clearInterval(interval);
+            };
+        }
+    }, [db, config, isConnected]);
 
     const purge = async () => {
-        if (!db || !config.collectionName) return;
-        if (!window.confirm(`Are you sure you want to PERMANENTLY delete all records from "${config.collectionName}"?`)) return;
+        if (!config) return;
+        
+        const targetName = config.provider === 'Firebase' ? config.collectionName : config.provider;
+        if (!window.confirm(`Are you sure you want to PERMANENTLY delete all records from "${targetName}"?`)) return;
 
         setIsPurging(true);
         try {
-            const snapshot = await getDocs(collection(db, config.collectionName));
-            const batchSize = 450;
-            let processed = 0;
-
-            while (processed < snapshot.docs.length) {
-                const batch = writeBatch(db);
-                const chunk = snapshot.docs.slice(processed, processed + batchSize);
-                chunk.forEach(d => batch.delete(d.ref));
-                await batch.commit();
-                processed += chunk.length;
+            await DataManager.purgeData(config);
+            if (config.provider !== 'Firebase') {
+                setData([]);
             }
             setError(null);
         } catch (err: any) {

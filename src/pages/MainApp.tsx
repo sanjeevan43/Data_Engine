@@ -1,5 +1,5 @@
 import { useState, useMemo } from 'react';
-import { Database, CheckCircle2, AlertCircle } from 'lucide-react';
+import { Database, CheckCircle2, AlertCircle, ArrowRight, Sliders } from 'lucide-react';
 import { FileUpload } from '../components/FileUpload';
 import { Header } from '../components/Header';
 import { SettingsModal } from '../components/SettingsModal';
@@ -13,10 +13,6 @@ import { useCsvImporter } from '../hooks/useCsvImporter';
 import { useCollectionData } from '../hooks/useCollectionData';
 import { DataOrchestratorAgent, type OrchestrationResult } from '../services/ai/agent/DataOrchestratorAgent';
 
-/**
- * Main application page – displayed after the user clicks "Get Started" on the landing page.
- * It contains the full CSV‑import workflow: upload, preview, stats, and a button to commit the data.
- */
 export default function MainApp() {
     const { config, isConnected } = useFirebase();
     const { data, error: dataError, isPurging, purge } = useCollectionData();
@@ -35,25 +31,35 @@ export default function MainApp() {
         model: config.aiModel || 'gemini-pro'
     }), [config.aiApiKey, config.aiModel]);
 
-    // Derived state – unique file count for stats
     const uniqueFilesCount = useMemo(
         () => new Set(data.map(row => (row as any)._fileName || 'Cloud Source')).size,
         [data],
     );
 
-    // Handlers ----------------------------------------------------------
+    // Stepper logic derived from app state
+    // Step 1: Upload (default)
+    // Step 2: AI Proposal (when orchestrationResult is present)
+    // Step 3: Schema Mapping (when processedFiles is populated and orchestration approved)
+    // Step 4: Sync Pipeline (when data exists in collection or mapping finished)
+    const currentStep = useMemo(() => {
+        if (!isConnected) return 1;
+        if (orchestrationResult) return 2;
+        if (importer.processedFiles.length > 0) return 3;
+        return 4;
+    }, [isConnected, orchestrationResult, importer.processedFiles]);
+
+    // Handlers
     const handleFileSelect = async (files: File[]) => {
         if (files.length === 0) return;
         
         setPendingFiles(files);
-        
-        // Use the first file for orchestration demo (batch orchestration can be added later)
         const file = files[0];
         const reader = new FileReader();
         
         reader.onload = async (e) => {
             const text = e.target?.result as string;
             const lines = text.split('\n').filter(l => l.trim());
+            if (lines.length === 0) return;
             const headers = lines[0].split(',').map(h => h.trim());
             const rows = lines.slice(1).map(l => l.split(',').map(v => v.trim()));
             
@@ -65,10 +71,7 @@ export default function MainApp() {
     };
 
     const handleApproveOrchestration = async (result: OrchestrationResult) => {
-        // 1. Prepare the processed files for the importer
         await importer.parseMultipleFiles(pendingFiles);
-        
-        // 2. Apply the orchestration suggestions to the importer's first file mapping
         if (importer.processedFiles.length > 0) {
             const neuralMapping = result.fields.map(f => ({
                 csvHeader: f.originalHeader,
@@ -79,10 +82,8 @@ export default function MainApp() {
                 isRequired: f.isPrimaryKey,
                 isUnique: f.isPrimaryKey
             }));
-            
             importer.updateMapping(0, neuralMapping);
         }
-        
         setOrchestrationResult(null);
     };
 
@@ -102,7 +103,7 @@ export default function MainApp() {
             {/* Ambient Glow */}
             <div className="absolute top-20 left-1/2 -translate-x-1/2 w-[800px] h-[400px] bg-cyan-500/10 blur-[120px] rounded-full pointer-events-none" />
 
-            {/* Neural Orchestrator Panel – shown before mapping */}
+            {/* Neural Orchestrator Modal */}
             {orchestrationResult && (
                 <DataOrchestratorPanel 
                     fileName={pendingFiles[0]?.name || 'dataset.csv'}
@@ -115,7 +116,7 @@ export default function MainApp() {
                 />
             )}
 
-            {/* Enhanced Mapping modal – appears after orchestration is approved or skipped */}
+            {/* Enhanced Mapping modal */}
             {!orchestrationResult && importer.processedFiles.length > 0 && (
                 <EnhancedMappingModal
                     fileName={importer.processedFiles[0].file.name}
@@ -154,7 +155,40 @@ export default function MainApp() {
 
             <Header onOpenSettings={() => setShowSettings(true)} />
 
-            <main className="relative z-10 max-w-7xl mx-auto px-6 py-16 -mt-20 space-y-12">
+            {/* Pipeline Step Progress Indicator */}
+            <div className="max-w-5xl mx-auto px-6 pt-10 relative z-20">
+                <div className="bg-zinc-950/40 border border-white/5 rounded-3xl p-6 backdrop-blur-xl">
+                    <div className="flex flex-col md:flex-row items-center justify-between gap-6 md:gap-0">
+                        <div className="flex items-center gap-3">
+                            <div className="w-8 h-8 rounded-full bg-cyan-500/10 border border-cyan-500/20 flex items-center justify-center font-bold text-cyan-400 text-xs">
+                                0{currentStep}
+                            </div>
+                            <div>
+                                <div className="text-[9px] font-black uppercase tracking-widest text-zinc-500">Pipeline State</div>
+                                <h3 className="text-sm font-black uppercase text-white tracking-wider">
+                                    {currentStep === 1 && 'Ingestion Ready'}
+                                    {currentStep === 2 && 'Neural Analysis'}
+                                    {currentStep === 3 && 'Schema Mapping'}
+                                    {currentStep === 4 && 'Sync Pipeline Active'}
+                                </h3>
+                            </div>
+                        </div>
+
+                        {/* Visual Step Stepper */}
+                        <div className="flex items-center gap-4 text-xs font-semibold text-zinc-500">
+                            <span className={`transition-all duration-300 ${currentStep >= 1 ? 'text-white' : ''}`}>1. Ingestion</span>
+                            <ArrowRight className="w-3.5 h-3.5 text-zinc-700" />
+                            <span className={`transition-all duration-300 ${currentStep >= 2 ? 'text-cyan-400 font-bold' : ''}`}>2. AI Suggestion</span>
+                            <ArrowRight className="w-3.5 h-3.5 text-zinc-700" />
+                            <span className={`transition-all duration-300 ${currentStep >= 3 ? 'text-purple-400 font-bold' : ''}`}>3. Mapping</span>
+                            <ArrowRight className="w-3.5 h-3.5 text-zinc-700" />
+                            <span className={`transition-all duration-300 ${currentStep >= 4 ? 'text-emerald-400 font-bold' : ''}`}>4. Pipeline</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <main className="relative z-10 max-w-7xl mx-auto px-6 py-12 space-y-12">
                 {/* Error banner */}
                 {(importer.error || dataError) && (
                     <div className="bg-red-500/10 backdrop-blur-xl border border-red-500/30 p-6 rounded-2xl shadow-2xl flex items-center justify-between animate-in slide-in-from-top-6 w-full max-w-4xl mx-auto">
@@ -164,11 +198,11 @@ export default function MainApp() {
                             </div>
                             <div>
                                 <h3 className="font-black text-white text-xl mb-1">System Alert</h3>
-                                <p className="text-red-200 font-medium">{importer.error || dataError}</p>
+                                <p className="text-red-200 font-medium text-sm">{importer.error || dataError}</p>
                             </div>
                         </div>
                         {!isConnected && (
-                            <button onClick={() => setShowSettings(true)} className="px-8 py-4 bg-slate-800/80 text-red-500 rounded-2xl font-black hover:bg-slate-800 transition-all transform hover:scale-105 shadow-xl border border-red-500/20">
+                            <button onClick={() => setShowSettings(true)} className="px-6 py-3 bg-slate-850 text-red-500 rounded-xl font-bold hover:bg-slate-800 transition-all border border-red-500/20 text-sm">
                                 Fix Settings
                             </button>
                         )}
@@ -202,23 +236,32 @@ export default function MainApp() {
                 {/* When DB is connected – stats, import button, grid */}
                 {isConnected && (
                     <div className="w-full max-w-6xl mx-auto space-y-16 animate-in fade-in slide-in-from-bottom-6 duration-700 relative z-20">
+                        <div className="flex flex-col md:flex-row items-center justify-between gap-6 pb-6 border-b border-white/5">
+                            <div>
+                                <h2 className="text-2xl font-black tracking-tight text-white uppercase flex items-center gap-2">
+                                    <Sliders className="w-5 h-5 text-cyan-400" /> Active Sync Stream
+                                </h2>
+                                <p className="text-xs text-zinc-500 font-bold uppercase tracking-widest mt-1">Real-time statistics & document storage</p>
+                            </div>
+                            {data.length > 0 && (
+                                <button
+                                    onClick={handleCommit}
+                                    className="group relative px-6 py-3 bg-white text-black rounded-xl font-bold hover:scale-[1.02] active:scale-95 transition-all w-full md:w-auto shadow-[0_0_20px_rgba(255,255,255,0.1)] flex items-center justify-center gap-2 overflow-hidden text-sm"
+                                >
+                                    <span className="relative z-10 flex items-center gap-2">
+                                        Execute Sync Pipeline <CheckCircle2 className="w-4 h-4 group-hover:text-cyan-600 transition-colors" />
+                                    </span>
+                                </button>
+                            )}
+                        </div>
+
                         <Stats
                             isDbConnected={isConnected}
                             totalStorage={data.length}
                             collectionName={config.collectionName}
                             uniqueFilesCount={uniqueFilesCount}
                         />
-                        {/* Import Data button */}
-                        <div className="flex justify-end">
-                            <button
-                                onClick={handleCommit}
-                                className="group relative px-6 py-3 bg-white text-black rounded-xl font-bold hover:scale-[1.02] active:scale-95 transition-all w-full md:w-auto shadow-[0_0_20px_rgba(255,255,255,0.1)] flex items-center justify-center gap-2 overflow-hidden"
-                            >
-                                <span className="relative z-10 flex items-center gap-2">
-                                    Execute Sync Pipeline <CheckCircle2 className="w-5 h-5 group-hover:text-cyan-600 transition-colors" />
-                                </span>
-                            </button>
-                        </div>
+                        
                         <DataGrid data={data} onPurge={purge} isPurging={isPurging} collectionName={config.collectionName} />
                     </div>
                 )}

@@ -193,14 +193,275 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ onClose, initialPr
                                 )}
 
                                 {!['Firebase', 'Supabase'].includes(tempConfig.provider) && (
-                                    <div className="text-center py-16 bg-white/[0.02] rounded-[2rem] border border-dashed border-white/10">
-                                        <div className="inline-block p-4 bg-black border border-white/10 rounded-2xl mb-4 group shadow-2xl">
-                                            <Database className="w-8 h-8 text-zinc-600 group-hover:text-cyan-400 transition-colors" />
-                                        </div>
-                                        <h3 className="text-lg font-black text-white hover:text-cyan-400 transition-colors">Configuration for {tempConfig.provider}</h3>
-                                        <p className="text-zinc-500 mt-2 text-xs font-bold uppercase tracking-widest max-w-[280px] mx-auto leading-relaxed">
-                                            Advanced adapter mapping required for this protocol.
-                                        </p>
+                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6 animate-in slide-in-from-bottom-2">
+                                        {tempConfig.provider === 'MongoDB' && [
+                                            { id: 'mongoApiUrl', label: 'MongoDB API URL', placeholder: 'https://data.mongodb-api.com/...', type: 'text' },
+                                            { id: 'mongoApiKey', label: 'MongoDB API Key', placeholder: 'Enter API Key...', type: 'password' },
+                                            { id: 'mongoDataSource', label: 'Cluster / Data Source', placeholder: 'Cluster0', type: 'text' },
+                                            { id: 'mongoDatabaseName', label: 'Database Name', placeholder: 'my_database', type: 'text' },
+                                            { id: 'collectionName', label: 'Collection Name', placeholder: 'csv_imports', type: 'text' }
+                                        ].map(f => (
+                                            <div key={f.id} className="space-y-3">
+                                                <label className="text-[10px] font-black text-zinc-500 uppercase tracking-widest flex items-center gap-2">
+                                                    <Key className="w-4 h-4" /> {f.label}
+                                                </label>
+                                                <input
+                                                    required
+                                                    type={f.type}
+                                                    value={(tempConfig as any)[f.id] || ''}
+                                                    onChange={(e) => setTempConfig({ ...tempConfig, [f.id]: e.target.value })}
+                                                    className="w-full bg-white/5 border border-white/10 rounded-xl px-5 py-3.5 outline-none focus:border-cyan-500/50 transition-all font-bold text-white text-sm"
+                                                    placeholder={f.placeholder}
+                                                />
+                                            </div>
+                                        ))}
+
+                                        {tempConfig.provider === 'Appwrite' && [
+                                            { id: 'appwriteEndpoint', label: 'Endpoint URL', placeholder: 'https://cloud.appwrite.io/v1', type: 'text' },
+                                            { id: 'appwriteProjectId', label: 'Project ID', placeholder: 'Enter Project ID...', type: 'text' },
+                                            { id: 'appwriteDatabaseId', label: 'Database ID', placeholder: 'Enter Database ID...', type: 'text' },
+                                            { id: 'collectionName', label: 'Collection (Table) ID', placeholder: 'csv_imports', type: 'text' }
+                                        ].map(f => (
+                                            <div key={f.id} className="space-y-3">
+                                                <label className="text-[10px] font-black text-zinc-500 uppercase tracking-widest flex items-center gap-2">
+                                                    <Key className="w-4 h-4" /> {f.label}
+                                                </label>
+                                                <input
+                                                    required
+                                                    type={f.type}
+                                                    value={(tempConfig as any)[f.id] || ''}
+                                                    onChange={(e) => setTempConfig({ ...tempConfig, [f.id]: e.target.value })}
+                                                    className="w-full bg-white/5 border border-white/10 rounded-xl px-5 py-3.5 outline-none focus:border-cyan-500/50 transition-all font-bold text-white text-sm"
+                                                    placeholder={f.placeholder}
+                                                />
+                                            </div>
+                                        ))}
+
+                                        {tempConfig.provider === 'PocketBase' && [
+                                            { id: 'pocketbaseUrl', label: 'PocketBase URL', placeholder: 'http://127.0.0.1:8090', type: 'text' },
+                                            { id: 'collectionName', label: 'Collection Name', placeholder: 'csv_imports', type: 'text' }
+                                        ].map(f => (
+                                            <div key={f.id} className="space-y-3">
+                                                <label className="text-[10px] font-black text-zinc-500 uppercase tracking-widest flex items-center gap-2">
+                                                    <Key className="w-4 h-4" /> {f.label}
+                                                </label>
+                                                <input
+                                                    required
+                                                    type={f.type}
+                                                    value={(tempConfig as any)[f.id] || ''}
+                                                    onChange={(e) => setTempConfig({ ...tempConfig, [f.id]: e.target.value })}
+                                                    className="w-full bg-white/5 border border-white/10 rounded-xl px-5 py-3.5 outline-none focus:border-cyan-500/50 transition-all font-bold text-white text-sm"
+                                                    placeholder={f.placeholder}
+                                                />
+                                            </div>
+                                        ))}
+
+                                        {tempConfig.provider === 'AWS Amplify' && [
+                                            { id: 'amplifyApiUrl', label: 'GraphQL API URL', placeholder: 'https://xxx.appsync-api.us-east-1.amazonaws.com/graphql', type: 'text' },
+                                            { id: 'amplifyApiKey', label: 'API Key', placeholder: 'Enter API Key...', type: 'password' },
+                                            { id: 'collectionName', label: 'Model/Table Name', placeholder: 'csv_imports', type: 'text' }
+                                        ].map(f => (
+                                            <div key={f.id} className="space-y-3">
+                                                <label className="text-[10px] font-black text-zinc-500 uppercase tracking-widest flex items-center gap-2">
+                                                    <Key className="w-4 h-4" /> {f.label}
+                                                </label>
+                                                <input
+                                                    required
+                                                    type={f.type}
+                                                    value={(tempConfig as any)[f.id] || ''}
+                                                    onChange={(e) => setTempConfig({ ...tempConfig, [f.id]: e.target.value })}
+                                                    className="w-full bg-white/5 border border-white/10 rounded-xl px-5 py-3.5 outline-none focus:border-cyan-500/50 transition-all font-bold text-white text-sm"
+                                                    placeholder={f.placeholder}
+                                                />
+                                            </div>
+                                        ))}
+
+                                        {tempConfig.provider === 'Hostinger MySQL' && [
+                                            { id: 'hostingerHost', label: 'MySQL Host', placeholder: 'sqlxxx.hostinger.com', type: 'text' },
+                                            { id: 'hostingerDatabase', label: 'Database Name', placeholder: 'u123456789_db', type: 'text' },
+                                            { id: 'hostingerUsername', label: 'Username', placeholder: 'u123456789_user', type: 'text' },
+                                            { id: 'hostingerPassword', label: 'Password', placeholder: 'Enter Password...', type: 'password' },
+                                            { id: 'collectionName', label: 'Table Name', placeholder: 'csv_imports', type: 'text' }
+                                        ].map(f => (
+                                            <div key={f.id} className="space-y-3">
+                                                <label className="text-[10px] font-black text-zinc-500 uppercase tracking-widest flex items-center gap-2">
+                                                    <Key className="w-4 h-4" /> {f.label}
+                                                </label>
+                                                <input
+                                                    required
+                                                    type={f.type}
+                                                    value={(tempConfig as any)[f.id] || ''}
+                                                    onChange={(e) => setTempConfig({ ...tempConfig, [f.id]: e.target.value })}
+                                                    className="w-full bg-white/5 border border-white/10 rounded-xl px-5 py-3.5 outline-none focus:border-cyan-500/50 transition-all font-bold text-white text-sm"
+                                                    placeholder={f.placeholder}
+                                                />
+                                            </div>
+                                        ))}
+
+                                        {tempConfig.provider === 'PostgreSQL' && [
+                                            { id: 'postgresHost', label: 'PostgreSQL Host', placeholder: 'localhost or postgres.example.com', type: 'text' },
+                                            { id: 'postgresDatabase', label: 'Database Name', placeholder: 'my_postgres_db', type: 'text' },
+                                            { id: 'postgresUsername', label: 'Username', placeholder: 'postgres', type: 'text' },
+                                            { id: 'postgresPassword', label: 'Password', placeholder: 'Enter Password...', type: 'password' },
+                                            { id: 'collectionName', label: 'Table Name', placeholder: 'csv_imports', type: 'text' }
+                                        ].map(f => (
+                                            <div key={f.id} className="space-y-3">
+                                                <label className="text-[10px] font-black text-zinc-500 uppercase tracking-widest flex items-center gap-2">
+                                                    <Key className="w-4 h-4" /> {f.label}
+                                                </label>
+                                                <input
+                                                    required
+                                                    type={f.type}
+                                                    value={(tempConfig as any)[f.id] || ''}
+                                                    onChange={(e) => setTempConfig({ ...tempConfig, [f.id]: e.target.value })}
+                                                    className="w-full bg-white/5 border border-white/10 rounded-xl px-5 py-3.5 outline-none focus:border-cyan-500/50 transition-all font-bold text-white text-sm"
+                                                    placeholder={f.placeholder}
+                                                />
+                                            </div>
+                                        ))}
+
+                                        {tempConfig.provider === 'MySQL' && [
+                                            { id: 'mysqlHost', label: 'MySQL Host', placeholder: 'localhost or mysql.example.com', type: 'text' },
+                                            { id: 'mysqlDatabase', label: 'Database Name', placeholder: 'my_mysql_db', type: 'text' },
+                                            { id: 'mysqlUsername', label: 'Username', placeholder: 'root', type: 'text' },
+                                            { id: 'mysqlPassword', label: 'Password', placeholder: 'Enter Password...', type: 'password' },
+                                            { id: 'collectionName', label: 'Table Name', placeholder: 'csv_imports', type: 'text' }
+                                        ].map(f => (
+                                            <div key={f.id} className="space-y-3">
+                                                <label className="text-[10px] font-black text-zinc-500 uppercase tracking-widest flex items-center gap-2">
+                                                    <Key className="w-4 h-4" /> {f.label}
+                                                </label>
+                                                <input
+                                                    required
+                                                    type={f.type}
+                                                    value={(tempConfig as any)[f.id] || ''}
+                                                    onChange={(e) => setTempConfig({ ...tempConfig, [f.id]: e.target.value })}
+                                                    className="w-full bg-white/5 border border-white/10 rounded-xl px-5 py-3.5 outline-none focus:border-cyan-500/50 transition-all font-bold text-white text-sm"
+                                                    placeholder={f.placeholder}
+                                                />
+                                            </div>
+                                        ))}
+
+                                        {tempConfig.provider === 'Airtable' && [
+                                            { id: 'airtableApiKey', label: 'Personal Access Token (PAT)', placeholder: 'pat...', type: 'password' },
+                                            { id: 'airtableBaseId', label: 'Base ID', placeholder: 'app...', type: 'text' },
+                                            { id: 'airtableTableName', label: 'Table Name', placeholder: 'csv_imports', type: 'text' },
+                                            { id: 'collectionName', label: 'Sync Collection ID', placeholder: 'csv_imports', type: 'text' }
+                                        ].map(f => (
+                                            <div key={f.id} className="space-y-3">
+                                                <label className="text-[10px] font-black text-zinc-500 uppercase tracking-widest flex items-center gap-2">
+                                                    <Key className="w-4 h-4" /> {f.label}
+                                                </label>
+                                                <input
+                                                    required
+                                                    type={f.type}
+                                                    value={(tempConfig as any)[f.id] || ''}
+                                                    onChange={(e) => setTempConfig({ ...tempConfig, [f.id]: e.target.value })}
+                                                    className="w-full bg-white/5 border border-white/10 rounded-xl px-5 py-3.5 outline-none focus:border-cyan-500/50 transition-all font-bold text-white text-sm"
+                                                    placeholder={f.placeholder}
+                                                />
+                                            </div>
+                                        ))}
+
+                                        {tempConfig.provider === 'Google Sheets' && [
+                                            { id: 'googleSheetsApiKey', label: 'API Key', placeholder: 'AIzaSy...', type: 'password' },
+                                            { id: 'googleSpreadsheetId', label: 'Spreadsheet ID', placeholder: '1abc123...', type: 'text' },
+                                            { id: 'collectionName', label: 'Sheet (Tab) Name', placeholder: 'Sheet1', type: 'text' }
+                                        ].map(f => (
+                                            <div key={f.id} className="space-y-3">
+                                                <label className="text-[10px] font-black text-zinc-500 uppercase tracking-widest flex items-center gap-2">
+                                                    <Key className="w-4 h-4" /> {f.label}
+                                                </label>
+                                                <input
+                                                    required
+                                                    type={f.type}
+                                                    value={(tempConfig as any)[f.id] || ''}
+                                                    onChange={(e) => setTempConfig({ ...tempConfig, [f.id]: e.target.value })}
+                                                    className="w-full bg-white/5 border border-white/10 rounded-xl px-5 py-3.5 outline-none focus:border-cyan-500/50 transition-all font-bold text-white text-sm"
+                                                    placeholder={f.placeholder}
+                                                />
+                                            </div>
+                                        ))}
+
+                                        {tempConfig.provider === 'Notion' && [
+                                            { id: 'notionApiKey', label: 'Integration Token', placeholder: 'secret_...', type: 'password' },
+                                            { id: 'notionDatabaseId', label: 'Database ID', placeholder: 'Enter Database ID...', type: 'text' },
+                                            { id: 'collectionName', label: 'Sync Collection Name', placeholder: 'csv_imports', type: 'text' }
+                                        ].map(f => (
+                                            <div key={f.id} className="space-y-3">
+                                                <label className="text-[10px] font-black text-zinc-500 uppercase tracking-widest flex items-center gap-2">
+                                                    <Key className="w-4 h-4" /> {f.label}
+                                                </label>
+                                                <input
+                                                    required
+                                                    type={f.type}
+                                                    value={(tempConfig as any)[f.id] || ''}
+                                                    onChange={(e) => setTempConfig({ ...tempConfig, [f.id]: e.target.value })}
+                                                    className="w-full bg-white/5 border border-white/10 rounded-xl px-5 py-3.5 outline-none focus:border-cyan-500/50 transition-all font-bold text-white text-sm"
+                                                    placeholder={f.placeholder}
+                                                />
+                                            </div>
+                                        ))}
+
+                                        {tempConfig.provider === 'Xano' && [
+                                            { id: 'xanoApiUrl', label: 'Xano API URL', placeholder: 'https://xxx.xano.io/api:xxx', type: 'text' },
+                                            { id: 'xanoApiKey', label: 'Xano API Key (Optional)', placeholder: 'Enter API Key if required...', type: 'password' },
+                                            { id: 'collectionName', label: 'Table Name', placeholder: 'csv_imports', type: 'text' }
+                                        ].map(f => (
+                                            <div key={f.id} className="space-y-3">
+                                                <label className="text-[10px] font-black text-zinc-500 uppercase tracking-widest flex items-center gap-2">
+                                                    <Key className="w-4 h-4" /> {f.label}
+                                                </label>
+                                                <input
+                                                    required
+                                                    type={f.type}
+                                                    value={(tempConfig as any)[f.id] || ''}
+                                                    onChange={(e) => setTempConfig({ ...tempConfig, [f.id]: e.target.value })}
+                                                    className="w-full bg-white/5 border border-white/10 rounded-xl px-5 py-3.5 outline-none focus:border-cyan-500/50 transition-all font-bold text-white text-sm"
+                                                    placeholder={f.placeholder}
+                                                />
+                                            </div>
+                                        ))}
+
+                                        {tempConfig.provider === 'Nhost' && [
+                                            { id: 'nhostSubdomain', label: 'Subdomain', placeholder: 'xxxxxx', type: 'text' },
+                                            { id: 'nhostRegion', label: 'Region', placeholder: 'us-east-1', type: 'text' },
+                                            { id: 'collectionName', label: 'Table Name', placeholder: 'csv_imports', type: 'text' }
+                                        ].map(f => (
+                                            <div key={f.id} className="space-y-3">
+                                                <label className="text-[10px] font-black text-zinc-500 uppercase tracking-widest flex items-center gap-2">
+                                                    <Key className="w-4 h-4" /> {f.label}
+                                                </label>
+                                                <input
+                                                    required
+                                                    type={f.type}
+                                                    value={(tempConfig as any)[f.id] || ''}
+                                                    onChange={(e) => setTempConfig({ ...tempConfig, [f.id]: e.target.value })}
+                                                    className="w-full bg-white/5 border border-white/10 rounded-xl px-5 py-3.5 outline-none focus:border-cyan-500/50 transition-all font-bold text-white text-sm"
+                                                    placeholder={f.placeholder}
+                                                />
+                                            </div>
+                                        ))}
+
+                                        {tempConfig.provider === 'Convex' && [
+                                            { id: 'convexUrl', label: 'Convex Deployment URL', placeholder: 'https://xxx.convex.cloud', type: 'text' },
+                                            { id: 'convexDeploymentKey', label: 'Deployment Key / Token', placeholder: 'Enter token...', type: 'password' },
+                                            { id: 'collectionName', label: 'Table Name', placeholder: 'csv_imports', type: 'text' }
+                                        ].map(f => (
+                                            <div key={f.id} className="space-y-3">
+                                                <label className="text-[10px] font-black text-zinc-500 uppercase tracking-widest flex items-center gap-2">
+                                                    <Key className="w-4 h-4" /> {f.label}
+                                                </label>
+                                                <input
+                                                    required
+                                                    type={f.type}
+                                                    value={(tempConfig as any)[f.id] || ''}
+                                                    onChange={(e) => setTempConfig({ ...tempConfig, [f.id]: e.target.value })}
+                                                    className="w-full bg-white/5 border border-white/10 rounded-xl px-5 py-3.5 outline-none focus:border-cyan-500/50 transition-all font-bold text-white text-sm"
+                                                    placeholder={f.placeholder}
+                                                />
+                                            </div>
+                                        ))}
                                     </div>
                                 )}
                             </>

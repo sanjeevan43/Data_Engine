@@ -54,7 +54,7 @@ export class DataOrchestratorAgent {
         rows: any[][]
     ): Promise<OrchestrationResult> {
         const sampleRows = rows.slice(0, 10);
-        let proposal;
+        let proposal: OrchestrationProposal | undefined;
 
         // 1. Get Neural Schema Proposal
         if (this.gemini) {
@@ -65,7 +65,19 @@ export class DataOrchestratorAgent {
             }]);
             
             if (proposals && proposals.length > 0) {
-                proposal = proposals[0];
+                const rawProposal = proposals[0];
+                proposal = {
+                    suggestedTableName: rawProposal.suggestedTableName,
+                    confidence: rawProposal.confidence,
+                    fields: rawProposal.fields.map(f => ({
+                        originalHeader: f.originalHeader,
+                        suggestedName: f.suggestedName,
+                        dataType: f.dataType as any,
+                        reason: f.reason,
+                        isPrimaryKey: f.isPrimaryKey,
+                        isCleaned: false
+                    }))
+                };
             }
         }
 
@@ -100,7 +112,8 @@ export class DataOrchestratorAgent {
                 suggestedName: cleanName || 'field',
                 dataType: this.inferLocalType(header),
                 reason: 'Inferred via local structural analysis',
-                isPrimaryKey: header.toLowerCase().includes('id') || header.toLowerCase() === 'uuid'
+                isPrimaryKey: header.toLowerCase().includes('id') || header.toLowerCase() === 'uuid',
+                isCleaned: false
             };
         });
 

@@ -133,13 +133,13 @@ const defaultContext: FirebaseContextType = {
     db: null,
     config: {
         provider: 'Firebase',
-        apiKey: '',
-        authDomain: '',
-        projectId: '',
-        storageBucket: '',
-        messagingSenderId: '',
-        appId: '',
-        measurementId: '',
+        apiKey: 'AIzaSyCussdIu8sMoZfaIqnG_7R8TfKHhSoCCWg',
+        authDomain: 'omniflow-8665a.firebaseapp.com',
+        projectId: 'omniflow-8665a',
+        storageBucket: 'omniflow-8665a.firebasestorage.app',
+        messagingSenderId: '338804216293',
+        appId: '1:338804216293:web:73a07b86752c1b55d79f0c',
+        measurementId: 'G-XP0TY2T74P',
         collectionName: 'csv_imports',
         aiApiKey: '',
         aiModel: 'gemini-pro',
@@ -246,7 +246,7 @@ export const FirebaseProvider = ({ children }: { children: ReactNode }) => {
     };
 
     return (
-        <FirebaseContext.Provider value={{ db, config, updateConfig, isConnected: !!db, error, isValidated }}>
+        <FirebaseContext.Provider value={{ db, config, updateConfig, isConnected: config.provider === 'Firebase' ? !!db : isValidated, error, isValidated }}>
             {children}
         </FirebaseContext.Provider>
     );

@@ -3,7 +3,7 @@
  */
 
 import React, { useState } from 'react';
-import { X, Key, Link, Database, AlertCircle, Info } from 'lucide-react';
+import { X, Key, Link, Database, AlertCircle, Info, Sparkles } from 'lucide-react';
 
 export interface MappingField {
     csvHeader: string;
@@ -96,110 +96,109 @@ export const EnhancedMappingModal: React.FC<EnhancedMappingModalProps> = ({
     const canCommit = enabledCount > 0 && primaryKeyCount <= 1 && !isImporting;
 
     return (
-        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-6">
-            <div className="bg-white rounded-3xl shadow-2xl max-w-5xl w-full max-h-[90vh] overflow-hidden flex flex-col">
+        <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4 md:p-6 overflow-y-auto">
+            <div className="bg-zinc-950 border border-white/10 rounded-[2.5rem] shadow-[0_0_100px_rgba(6,182,212,0.15)] max-w-5xl w-full max-h-[90vh] overflow-hidden flex flex-col relative animate-in zoom-in-95 duration-300">
+                {/* Visual Glow Ambient */}
+                <div className="absolute top-0 right-0 w-80 h-80 bg-cyan-600/5 blur-[100px] pointer-events-none" />
+                <div className="absolute bottom-0 left-0 w-80 h-80 bg-purple-600/5 blur-[100px] pointer-events-none" />
+
                 {/* Header */}
-                <div className="bg-gradient-to-r from-blue-600 to-purple-600 p-8 text-white">
+                <div className="p-8 border-b border-white/10 bg-zinc-900/40 backdrop-blur-xl relative z-10">
                     <div className="flex items-start justify-between">
                         <div>
-                            <h2 className="text-3xl font-black mb-2">Configure Import</h2>
-                            <p className="text-blue-100 mb-4">
-                                {fileName} • {rowCount} rows → {collectionName}
+                            <div className="flex items-center gap-3 mb-2">
+                                <Sparkles className="w-5 h-5 text-cyan-400" />
+                                <h2 className="text-3xl font-black text-white uppercase tracking-tighter">Configure <span className="text-cyan-400">Import</span></h2>
+                            </div>
+                            <p className="text-zinc-400 text-sm font-medium">
+                                {fileName} • <span className="text-cyan-400">{rowCount} rows</span> → {collectionName}
                             </p>
-                            <div className="flex gap-3">
-                                <div className="bg-white/20 backdrop-blur px-4 py-2 rounded-xl">
-                                    <div className="text-sm font-bold">{enabledCount} Fields</div>
+                            <div className="flex flex-wrap gap-2 mt-4">
+                                <div className="bg-white/5 border border-white/10 px-3 py-1.5 rounded-xl">
+                                    <div className="text-xs font-bold text-zinc-300">{enabledCount} Fields Enabled</div>
                                 </div>
                                 {primaryKeyCount > 0 && (
-                                    <div className="bg-yellow-500/30 backdrop-blur px-4 py-2 rounded-xl flex items-center gap-2">
-                                        <Key className="w-4 h-4" />
-                                        <div className="text-sm font-bold">Primary Key Set</div>
+                                    <div className="bg-yellow-500/10 border border-yellow-500/20 px-3 py-1.5 rounded-xl flex items-center gap-1.5 text-yellow-400">
+                                        <Key className="w-3.5 h-3.5" />
+                                        <div className="text-xs font-bold">Primary Key Set</div>
                                     </div>
                                 )}
                                 {foreignKeyCount > 0 && (
-                                    <div className="bg-green-500/30 backdrop-blur px-4 py-2 rounded-xl flex items-center gap-2">
-                                        <Link className="w-4 h-4" />
-                                        <div className="text-sm font-bold">{foreignKeyCount} Foreign Keys</div>
+                                    <div className="bg-emerald-500/10 border border-emerald-500/20 px-3 py-1.5 rounded-xl flex items-center gap-1.5 text-emerald-400">
+                                        <Link className="w-3.5 h-3.5" />
+                                        <div className="text-xs font-bold">{foreignKeyCount} Foreign Keys</div>
                                     </div>
                                 )}
                             </div>
                         </div>
                         <button
                             onClick={onCancel}
-                            className="p-2 hover:bg-white/20 rounded-xl transition"
+                            className="p-2.5 hover:bg-white/5 border border-transparent hover:border-white/10 rounded-xl transition-all text-zinc-400 hover:text-white"
                         >
-                            <X className="w-6 h-6" />
+                            <X className="w-5 h-5" />
                         </button>
                     </div>
                 </div>
 
                 {/* Info Banner */}
-                <div className="bg-blue-50 border-l-4 border-blue-500 p-4 flex items-start gap-3">
-                    <Info className="w-5 h-5 text-blue-500 flex-shrink-0 mt-0.5" />
-                    <div className="text-sm text-blue-900">
-                        <strong>Primary Key:</strong> Unique identifier for each row (like ID). Only one field can be primary key.
-                        <br />
-                        <strong>Foreign Key:</strong> References data in another table. Can have multiple foreign keys.
+                <div className="bg-cyan-950/20 border-y border-white/5 px-8 py-4 flex items-start gap-3 relative z-10">
+                    <Info className="w-4 h-4 text-cyan-400 flex-shrink-0 mt-0.5" />
+                    <div className="text-xs text-zinc-400 leading-relaxed">
+                        <strong className="text-zinc-200">Primary Key:</strong> Unique identifier for each record. Only one field can be designated. <br />
+                        <strong className="text-zinc-200">Foreign Key:</strong> Maps relationships to parent tables in external data models.
                     </div>
                 </div>
 
                 {/* Field Mapping Table */}
-                <div className="flex-1 overflow-y-auto p-6">
-                    <table className="w-full">
-                        <thead className="sticky top-0 bg-slate-100 z-10">
-                            <tr className="text-left">
-                                <th className="p-3 font-bold text-slate-700">Enable</th>
-                                <th className="p-3 font-bold text-slate-700">CSV Header</th>
-                                <th className="p-3 font-bold text-slate-700">Database Field</th>
-                                <th className="p-3 font-bold text-slate-700">Type</th>
-                                <th className="p-3 font-bold text-slate-700 text-center">
-                                    <div className="flex items-center justify-center gap-2">
-                                        <Key className="w-4 h-4" />
-                                        Primary
-                                    </div>
-                                </th>
-                                <th className="p-3 font-bold text-slate-700 text-center">
-                                    <div className="flex items-center justify-center gap-2">
-                                        <Link className="w-4 h-4" />
-                                        Foreign
-                                    </div>
-                                </th>
-                                <th className="p-3 font-bold text-slate-700 text-center">Required</th>
-                                <th className="p-3 font-bold text-slate-700 text-center">Unique</th>
+                <div className="flex-1 overflow-y-auto p-6 md:p-8 relative z-10">
+                    <table className="w-full text-left border-collapse">
+                        <thead>
+                            <tr className="border-b border-white/5 text-[10px] font-black uppercase tracking-widest text-zinc-500">
+                                <th className="pb-4 pl-2">Enable</th>
+                                <th className="pb-4">CSV Header</th>
+                                <th className="pb-4">Database Field</th>
+                                <th className="pb-4">Data Type</th>
+                                <th className="pb-4 text-center">Primary</th>
+                                <th className="pb-4 text-center">Foreign</th>
+                                <th className="pb-4 text-center">Required</th>
+                                <th className="pb-4 text-center">Unique</th>
                             </tr>
                         </thead>
-                        <tbody>
+                        <tbody className="divide-y divide-white/5">
                             {mapping.map((field, index) => (
                                 <tr
                                     key={index}
-                                    className={`border-b border-slate-200 hover:bg-slate-50 transition ${!field.isEnabled ? 'opacity-50' : ''
+                                    className={`hover:bg-white/[0.02] transition-colors ${!field.isEnabled ? 'opacity-40' : ''
                                         }`}
                                 >
-                                    <td className="p-3">
+                                    <td className="py-4 pl-2">
                                         <input
                                             type="checkbox"
                                             checked={field.isEnabled}
                                             onChange={(e) => onUpdateMapping(index, { isEnabled: e.target.checked })}
-                                            className="w-5 h-5 rounded border-slate-300 text-blue-600 focus:ring-blue-500"
+                                            className="w-4 h-4 rounded border-white/10 bg-zinc-900 text-cyan-500 focus:ring-cyan-500/50 focus:ring-offset-zinc-950"
                                         />
                                     </td>
-                                    <td className="p-3 font-mono text-sm text-slate-600">
-                                        {field.csvHeader}
+                                    <td className="py-4 pr-4">
+                                        <span className="font-mono text-sm text-zinc-300 font-bold block max-w-[150px] truncate" title={field.csvHeader}>
+                                            {field.csvHeader}
+                                        </span>
                                     </td>
-                                    <td className="p-3">
+                                    <td className="py-4 pr-4">
                                         <input
                                             type="text"
                                             value={field.firestoreField}
                                             onChange={(e) => onUpdateMapping(index, { firestoreField: e.target.value })}
-                                            className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none"
+                                            className="w-full px-3 py-1.5 bg-zinc-900 border border-white/10 rounded-xl focus:border-cyan-500 focus:ring-1 focus:ring-cyan-500 outline-none text-sm text-white disabled:opacity-50 transition-all font-medium"
                                             disabled={!field.isEnabled}
+                                            placeholder="db_field"
                                         />
                                     </td>
-                                    <td className="p-3">
+                                    <td className="py-4 pr-4">
                                         <select
                                             value={field.dataType || 'string'}
                                             onChange={(e) => onUpdateMapping(index, { dataType: e.target.value as any })}
-                                            className="px-3 py-2 border border-slate-300 rounded-lg focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none text-sm"
+                                            className="px-3 py-1.5 bg-zinc-900 border border-white/10 rounded-xl focus:border-cyan-500 focus:ring-1 focus:ring-cyan-500 outline-none text-sm text-white disabled:opacity-50 transition-all font-semibold"
                                             disabled={!field.isEnabled}
                                         >
                                             <option value="string">String</option>
@@ -210,46 +209,46 @@ export const EnhancedMappingModal: React.FC<EnhancedMappingModalProps> = ({
                                             <option value="url">URL</option>
                                         </select>
                                     </td>
-                                    <td className="p-3 text-center">
+                                    <td className="py-4 text-center">
                                         <input
                                             type="checkbox"
                                             checked={field.isPrimaryKey || false}
                                             onChange={() => handlePrimaryKeyToggle(index)}
-                                            className="w-5 h-5 rounded border-slate-300 text-yellow-600 focus:ring-yellow-500"
+                                            className="w-4 h-4 rounded border-white/10 bg-zinc-900 text-yellow-500 focus:ring-yellow-500/50 focus:ring-offset-zinc-950"
                                             disabled={!field.isEnabled}
                                         />
                                     </td>
-                                    <td className="p-3 text-center">
+                                    <td className="py-4 text-center">
                                         <div className="flex items-center justify-center gap-2">
                                             <input
                                                 type="checkbox"
                                                 checked={field.isForeignKey || false}
                                                 onChange={() => handleForeignKeyToggle(index)}
-                                                className="w-5 h-5 rounded border-slate-300 text-green-600 focus:ring-green-500"
+                                                className="w-4 h-4 rounded border-white/10 bg-zinc-900 text-emerald-500 focus:ring-emerald-500/50 focus:ring-offset-zinc-950"
                                                 disabled={!field.isEnabled}
                                             />
                                             {field.isForeignKey && field.foreignKeyTable && (
-                                                <span className="text-xs text-green-600">
-                                                    → {field.foreignKeyTable}
+                                                <span className="text-[10px] font-bold px-2 py-0.5 bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 rounded-md">
+                                                    {field.foreignKeyTable}.{field.foreignKeyField}
                                                 </span>
                                             )}
                                         </div>
                                     </td>
-                                    <td className="p-3 text-center">
+                                    <td className="py-4 text-center">
                                         <input
                                             type="checkbox"
                                             checked={field.isRequired || false}
                                             onChange={(e) => onUpdateMapping(index, { isRequired: e.target.checked })}
-                                            className="w-5 h-5 rounded border-slate-300 text-red-600 focus:ring-red-500"
+                                            className="w-4 h-4 rounded border-white/10 bg-zinc-900 text-red-500 focus:ring-red-500/50 focus:ring-offset-zinc-950"
                                             disabled={!field.isEnabled}
                                         />
                                     </td>
-                                    <td className="p-3 text-center">
+                                    <td className="py-4 text-center">
                                         <input
                                             type="checkbox"
                                             checked={field.isUnique || false}
                                             onChange={(e) => onUpdateMapping(index, { isUnique: e.target.checked })}
-                                            className="w-5 h-5 rounded border-slate-300 text-purple-600 focus:ring-purple-500"
+                                            className="w-4 h-4 rounded border-white/10 bg-zinc-900 text-purple-500 focus:ring-purple-500/50 focus:ring-offset-zinc-950"
                                             disabled={!field.isEnabled}
                                         />
                                     </td>
@@ -261,32 +260,32 @@ export const EnhancedMappingModal: React.FC<EnhancedMappingModalProps> = ({
 
                 {/* Validation Messages */}
                 {primaryKeyCount > 1 && (
-                    <div className="mx-6 mb-4 bg-red-50 border-l-4 border-red-500 p-4 flex items-start gap-3">
-                        <AlertCircle className="w-5 h-5 text-red-500 flex-shrink-0" />
-                        <div className="text-sm text-red-900">
-                            <strong>Error:</strong> Only one field can be set as primary key. Please uncheck the others.
+                    <div className="mx-8 mb-6 bg-red-950/20 border border-red-500/20 p-4 rounded-2xl flex items-start gap-3">
+                        <AlertCircle className="w-4 h-4 text-red-400 flex-shrink-0 mt-0.5" />
+                        <div className="text-xs text-red-200">
+                            <strong>System Error:</strong> Multiple primary key constraints specified. Ensure only one unique identifier is mapped.
                         </div>
                     </div>
                 )}
 
                 {primaryKeyCount === 0 && (
-                    <div className="mx-6 mb-4 bg-yellow-50 border-l-4 border-yellow-500 p-4 flex items-start gap-3">
-                        <AlertCircle className="w-5 h-5 text-yellow-500 flex-shrink-0" />
-                        <div className="text-sm text-yellow-900">
-                            <strong>Recommended:</strong> Set a primary key field for better data integrity.
+                    <div className="mx-8 mb-6 bg-yellow-950/20 border border-yellow-500/20 p-4 rounded-2xl flex items-start gap-3">
+                        <AlertCircle className="w-4 h-4 text-yellow-400 flex-shrink-0 mt-0.5" />
+                        <div className="text-xs text-yellow-200">
+                            <strong>Standard Recommendation:</strong> Declaring a primary key field is highly recommended to enable updates/upserts.
                         </div>
                     </div>
                 )}
 
                 {/* Footer */}
-                <div className="border-t border-slate-200 p-6 bg-slate-50 flex justify-between items-center">
-                    <div className="text-sm text-slate-600">
+                <div className="border-t border-white/10 p-6 bg-zinc-900/20 backdrop-blur-xl flex justify-between items-center relative z-10">
+                    <div className="text-xs font-black uppercase tracking-widest text-zinc-500">
                         {enabledCount} of {mapping.length} fields enabled
                     </div>
                     <div className="flex gap-3">
                         <button
                             onClick={onCancel}
-                            className="px-6 py-3 bg-slate-200 text-slate-700 rounded-xl font-bold hover:bg-slate-300 transition"
+                            className="btn-secondary py-2.5 px-6 text-sm"
                             disabled={isImporting}
                         >
                             Cancel
@@ -294,20 +293,17 @@ export const EnhancedMappingModal: React.FC<EnhancedMappingModalProps> = ({
                         <button
                             onClick={onCommit}
                             disabled={!canCommit}
-                            className={`px-8 py-3 rounded-xl font-bold transition flex items-center gap-2 ${canCommit
-                                ? 'bg-gradient-to-r from-blue-600 to-purple-600 text-white hover:shadow-lg'
-                                : 'bg-slate-300 text-slate-500 cursor-not-allowed'
-                                }`}
+                            className={`btn-primary py-2.5 px-8 text-sm flex items-center gap-2 ${!canCommit ? 'opacity-40 cursor-not-allowed hover:scale-100 shadow-none' : ''}`}
                         >
                             {isImporting ? (
                                 <>
-                                    <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                                    <div className="w-4 h-4 border-2 border-black border-t-transparent rounded-full animate-spin" />
                                     Importing...
                                 </>
                             ) : (
                                 <>
-                                    <Database className="w-5 h-5" />
-                                    Import to Database
+                                    <Database className="w-4 h-4" />
+                                    Inject Pipeline
                                 </>
                             )}
                         </button>
@@ -317,39 +313,41 @@ export const EnhancedMappingModal: React.FC<EnhancedMappingModalProps> = ({
 
             {/* Foreign Key Configuration Modal */}
             {foreignKeyConfig && (
-                <div className="fixed inset-0 bg-black/70 z-60 flex items-center justify-center p-6">
-                    <div className="bg-white rounded-2xl p-8 max-w-md w-full">
-                        <h3 className="text-2xl font-bold mb-4 flex items-center gap-2">
-                            <Link className="w-6 h-6 text-green-600" />
-                            Configure Foreign Key
+                <div className="fixed inset-0 bg-black/90 backdrop-blur-md z-[60] flex items-center justify-center p-4">
+                    <div className="bg-zinc-950 border border-white/10 rounded-[2rem] p-8 max-w-md w-full relative animate-in zoom-in-95 duration-300">
+                        <div className="absolute top-0 right-0 w-40 h-40 bg-emerald-600/5 blur-[50px] pointer-events-none" />
+                        
+                        <h3 className="text-xl font-black mb-2 text-white uppercase tracking-tighter flex items-center gap-2">
+                            <Link className="w-5 h-5 text-emerald-400" />
+                            Reference Relation
                         </h3>
-                        <p className="text-slate-600 mb-6">
-                            Field: <strong>{mapping[foreignKeyConfig.fieldIndex].csvHeader}</strong>
+                        <p className="text-xs text-zinc-500 uppercase tracking-widest font-black mb-6">
+                            Field: <span className="text-white font-mono">{mapping[foreignKeyConfig.fieldIndex].csvHeader}</span>
                         </p>
 
                         <div className="space-y-4 mb-6">
                             <div>
-                                <label className="block text-sm font-bold text-slate-700 mb-2">
-                                    Referenced Table
+                                <label className="block text-[10px] font-black uppercase tracking-widest text-zinc-400 mb-2">
+                                    Target Collection / Table
                                 </label>
                                 <input
                                     type="text"
                                     value={foreignKeyConfig.table}
                                     onChange={(e) => setForeignKeyConfig({ ...foreignKeyConfig, table: e.target.value })}
                                     placeholder="e.g., users, products"
-                                    className="w-full px-4 py-3 border-2 border-slate-300 rounded-xl focus:border-green-500 focus:outline-none"
+                                    className="w-full px-4 py-3 bg-zinc-900 border border-white/10 rounded-xl focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 outline-none text-white text-sm"
                                 />
                             </div>
                             <div>
-                                <label className="block text-sm font-bold text-slate-700 mb-2">
-                                    Referenced Field
+                                <label className="block text-[10px] font-black uppercase tracking-widest text-zinc-400 mb-2">
+                                    Target Identifier Field
                                 </label>
                                 <input
                                     type="text"
                                     value={foreignKeyConfig.field}
                                     onChange={(e) => setForeignKeyConfig({ ...foreignKeyConfig, field: e.target.value })}
-                                    placeholder="e.g., id, user_id"
-                                    className="w-full px-4 py-3 border-2 border-slate-300 rounded-xl focus:border-green-500 focus:outline-none"
+                                    placeholder="e.g., id, uid"
+                                    className="w-full px-4 py-3 bg-zinc-900 border border-white/10 rounded-xl focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 outline-none text-white text-sm"
                                 />
                             </div>
                         </div>
@@ -358,13 +356,13 @@ export const EnhancedMappingModal: React.FC<EnhancedMappingModalProps> = ({
                             <button
                                 onClick={saveForeignKeyConfig}
                                 disabled={!foreignKeyConfig.table || !foreignKeyConfig.field}
-                                className="flex-1 px-6 py-3 bg-green-500 text-white rounded-xl font-bold hover:bg-green-600 disabled:bg-slate-300 disabled:cursor-not-allowed"
+                                className="flex-1 px-6 py-3 bg-white text-black font-semibold rounded-xl hover:bg-zinc-200 transition-all disabled:opacity-40 disabled:hover:bg-white"
                             >
                                 Save
                             </button>
                             <button
                                 onClick={() => setForeignKeyConfig(null)}
-                                className="flex-1 px-6 py-3 bg-slate-200 text-slate-700 rounded-xl font-bold hover:bg-slate-300"
+                                className="flex-1 px-6 py-3 bg-transparent text-white font-semibold rounded-xl border border-white/10 hover:bg-white/5 transition-all"
                             >
                                 Cancel
                             </button>
